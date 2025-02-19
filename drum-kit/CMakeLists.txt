@@ -12,6 +12,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # used by pico_set_program_url
 set(PICO_APPS_PATH ${PROJECT_SOURCE_DIR})
+set(CMAKE_C_COMPILER_FOR_BUILD "${CMAKE_C_COMPILER}")
+set(CMAKE_CXX_COMPILER_FOR_BUILD "${CMAKE_CXX_COMPILER}")
 
 # initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
@@ -31,10 +33,16 @@ add_compile_options(-Wall
 add_executable(drum-kit)
 
 # Specify the source files to be compiled.
-target_sources(drum-kit PRIVATE drum-kit.cpp)
+target_sources(drum-kit PRIVATE "drum-kit.c")
 
-# Pull in commonly used features.
 target_link_libraries(drum-kit PRIVATE pico_stdlib)
+target_link_libraries(drum-kit PRIVATE hardware_spi)
+
 
 # Create map/bin/hex file etc.
 pico_add_extra_outputs(drum-kit)
+
+
+# Enable usb output, disable uart output
+pico_enable_stdio_usb(${PROJECT_NAME} 1)
+pico_enable_stdio_uart(${PROJECT_NAME} 0)
