@@ -1,4 +1,4 @@
-﻿// drum-kit.c
+// drum-kit.c
 
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
