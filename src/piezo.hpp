@@ -18,6 +18,7 @@ class Piezo {
     ~Piezo();
 
     void setPiezoCallback(PiezoCallback cb) { piezo_callback_ = cb; }
+    void update();
 
     private:
     // current multiplexer channel index

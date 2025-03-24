@@ -2,6 +2,7 @@
 
 #include "configs.hpp"
 #include "hardware/adc.h"
+#include <hardware/timer.h>
 
 #include "piezo.hpp"
 
@@ -28,7 +29,7 @@ void Piezo::selectMuxChannel(uint8_t channel) {
     // convert the channel to binary
     // adding 5 to all the binary outputs just for space reasons on the breadboard
     // (A5-A7 are on the left of the mux, while A0-A2 are on the right)
-    uint8_t binary_ch = channel + 0x5;
+    uint8_t binary_ch = channel + LOWEST_MUX_IN;
 
     gpio_put(MUX_S0_PIN, binary_ch & 0x1);
     gpio_put(MUX_S1_PIN, (binary_ch >> 1) & 0x1);
@@ -42,5 +43,53 @@ void Piezo::selectMuxChannel(uint8_t channel) {
     delay += 0x2;
     delay -= 0x1;
     delay &= 0x2;
+
+}
+
+// function polls two of the piezos and updates which two piezos to poll next
+void Piezo::update() {
+    // select current mux channel
+    selectMuxChannel(mux_channel_index_);
+
+    // read adc0 and adc1 for raw values
+    adc_select_input(0);
+    uint16_t raw0 = adc_read();
+    adc_select_input(1);
+    uint16_t raw1 = adc_read();
+
+
+    int piezo_index_A = mux_channel_index_;
+    int piezo_index_B = mux_channel_index_ + HALF_NUM_PIEZOS;
+
+    uint32_t current_time_us = time_us_32();
+
+    // might be able to remove the check for piezo A
+    // if optimisation is an issue later
+    // since this function is being called so often
+    if (piezo_index_A < NUM_PIEZOS) {
+        if (raw0 < PIEZO_THRESHOLD[piezo_index_A]) {
+            if (current_time_us - last_trigger_time_us_[piezo_index_A] > PIEZO_DEBOUNCE_TIME_US) {
+                last_trigger_time_us_[piezo_index_A] = current_time_us;
+
+                if (piezo_callback_) {
+                    piezo_callback_(piezo_index_A, raw0);
+                }
+            }
+        }
+    }
+
+    if (piezo_index_B < NUM_PIEZOS) {
+        if (raw0 < PIEZO_THRESHOLD[piezo_index_B]) {
+            if (current_time_us - last_trigger_time_us_[piezo_index_B] > PIEZO_DEBOUNCE_TIME_US) {
+                last_trigger_time_us_[piezo_index_B] = current_time_us;
+
+                if (piezo_callback_) {
+                    piezo_callback_(piezo_index_B, raw1);
+                }
+            }
+        }
+    }
+
+    mux_channel_index_ = (mux_channel_index_ + 1) % HALF_NUM_PIEZOS;
 
 }
