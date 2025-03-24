@@ -13,7 +13,10 @@ typedef void (*PiezoCallback)(int piezo_index, uint16_t velocity);
 
 class Piezo {
     public:
-    void init();
+
+    Piezo();
+    ~Piezo();
+
     void setPiezoCallback(PiezoCallback cb) { piezo_callback_ = cb; }
 
     private:
@@ -25,5 +28,7 @@ class Piezo {
 
     // callback to trigger when a hit is detected
     PiezoCallback piezo_callback_ = nullptr;
+
+    void selectMuxChannel(uint8_t channel);
 
 };

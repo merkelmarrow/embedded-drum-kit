@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(pico-drum-kit main.cpp )
+add_executable(pico-drum-kit main.cpp src/configs.hpp src/piezo.cpp)
 
 pico_set_program_name(pico-drum-kit "pico-drum-kit")
 pico_set_program_version(pico-drum-kit "0.1")
@@ -51,6 +51,7 @@ target_link_libraries(pico-drum-kit
 # Add the standard include files to the build
 target_include_directories(pico-drum-kit PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
 # Add any user requested libraries
@@ -60,7 +61,7 @@ target_link_libraries(pico-drum-kit
         hardware_dma
         hardware_timer
         hardware_clocks
-        
+        hardware_adc
         )
 
 pico_add_extra_outputs(pico-drum-kit)
