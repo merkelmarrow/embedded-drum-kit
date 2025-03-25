@@ -63,3 +63,8 @@ constexpr uint32_t PIEZO_RECOVERY_TIME_US = 50 * 1000;
 // piezo capture time (time after first trigger to look for the max value of the peak)
 // time (us) = time (ms) * 1000
 constexpr uint32_t PIEZO_CAPTURE_TIME_US = 1 * 1000;
+
+constexpr uint32_t SAMPLE_RATE_HZ = 44100;
+constexpr uint32_t AUDIO_BUFFER_SIZE = 256;
+constexpr uint8_t NUM_VOICES = 8;
+constexpr uint8_t NUM_DRUM_SAMPLES = NUM_PIEZOS; // number of samples stored should match the number of piezos used
