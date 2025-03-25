@@ -37,5 +37,10 @@ constexpr uint16_t PIEZO_THRESHOLD[NUM_PIEZOS] = {
     BASE_PIEZO_THRESHOLD, BASE_PIEZO_THRESHOLD
 };
 
-// define the piezo debounce time in microseconds
-constexpr uint32_t PIEZO_DEBOUNCE_TIME_US = 5000;
+// piezo recovery time in microsends (after a strike)
+// time (us) = time (ms) * 1000
+constexpr uint32_t PIEZO_RECOVERY_TIME_US = 50 * 1000;
+
+// piezo capture time (time after first sample above threshold to look for the max value of the peak)
+// time (us) = time (ms) * 1000
+constexpr uint32_t PIEZO_CAPTURE_TIME_US = 1 * 1000;

@@ -9,6 +9,9 @@
 Piezo::Piezo() {
     adc_init();
 
+    // Set maximum sample rate for the ADC
+    adc_set_clkdiv(0);
+
     adc_gpio_init(ADC0_PIN);
     adc_gpio_init(ADC1_PIN);
 
@@ -23,6 +26,14 @@ Piezo::Piezo() {
 
     // default mux channel is 0
     selectMuxChannel(0);
+
+    // Initialize all sensor states as ready
+    for (auto& state : piezo_states_) {
+        state.ready_for_trigger = true;
+        state.peak_end_time_us = 0;
+        state.max_value = 0;
+        state.recovery_end_time_us = 0;
+    }
 }
 
 void Piezo::selectMuxChannel(uint8_t channel) {
@@ -35,22 +46,20 @@ void Piezo::selectMuxChannel(uint8_t channel) {
     gpio_put(MUX_S1_PIN, (binary_ch >> 1) & 0x1);
     gpio_put(MUX_S2_PIN, (binary_ch >> 2) & 0x1);
 
-    // random instructions to allow mux to settle, takes approx 60ns according to datasheet
+    // random instructions to let the mux settle, takes approx 60ns according to datasheet
     // or around 10 instructions without overclocking
-    // so below are random instructions to delay by 4-7 instructions
+    // so below are random instructions to delay by 4-7 instructions since there will definitely
+    // be more instructions between reads
+    // it saves us from having to think about it somewhere else
     int delay = 0x1;
     delay ^= 0x1;
     delay += 0x2;
     delay -= 0x1;
     delay &= 0x2;
-
 }
 
 // function polls two of the piezos and updates which two piezos to poll next
 void Piezo::update() {
-    // select current mux channel
-    selectMuxChannel(mux_channel_index_);
-
     // read adc0 and adc1 for raw values
     adc_select_input(0);
     uint16_t raw0 = adc_read();
@@ -63,33 +72,49 @@ void Piezo::update() {
 
     uint32_t current_time_us = time_us_32();
 
-    // might be able to remove the check for piezo A
-    // if optimisation is an issue later
-    // since this function is being called so often
-    if (piezo_index_A < NUM_PIEZOS) {
-        if (raw0 < PIEZO_THRESHOLD[piezo_index_A]) {
-            if (current_time_us - last_trigger_time_us_[piezo_index_A] > PIEZO_DEBOUNCE_TIME_US) {
-                last_trigger_time_us_[piezo_index_A] = current_time_us;
 
-                if (piezo_callback_) {
-                    piezo_callback_(piezo_index_A, raw0);
-                }
-            }
-        }
-    }
 
-    if (piezo_index_B < NUM_PIEZOS) {
-        if (raw0 < PIEZO_THRESHOLD[piezo_index_B]) {
-            if (current_time_us - last_trigger_time_us_[piezo_index_B] > PIEZO_DEBOUNCE_TIME_US) {
-                last_trigger_time_us_[piezo_index_B] = current_time_us;
 
-                if (piezo_callback_) {
-                    piezo_callback_(piezo_index_B, raw1);
-                }
-            }
-        }
-    }
-
+    
     mux_channel_index_ = (mux_channel_index_ + 1) % HALF_NUM_PIEZOS;
+    // select next mux channel for next update
+    selectMuxChannel(mux_channel_index_);
 
+}
+
+void Piezo::process_piezo_reading(int piezo_index, uint16_t reading, uint32_t current_time_us) {
+    if (piezo_index >= NUM_PIEZOS) return;
+
+    // access the piezo's current state (reference to avoid copying)
+    PiezoState& state = piezo_states_[piezo_index];
+
+    // check if we're in the recovery period
+    if (current_time_us < state.recovery_end_time_us) return;
+
+    // we'll only enter here if we're already capturing a peak
+    if (!state.ready_for_trigger) {
+        // update the maximum if it's bigger than what we've already seen
+        if (reading > state.max_value) {
+            state.max_value = reading;
+        }
+
+        // check if we should stop capturing for this particular strike
+        if (current_time_us >= state.peak_end_time_us) {
+            // peak capture is done, trigger the callback with the max value
+            if (piezo_callback_) {
+                piezo_callback_(piezo_index, state.max_value);
+            }
+
+            state.ready_for_trigger = true;
+            state.recovery_end_time_us = current_time_us + (PIEZO_RECOVERY_TIME_US);
+        }
+    }
+
+    // if we are ready for the trigger, check if reading exceeds the threshold
+    else if (reading > PIEZO_THRESHOLD[piezo_index]) {
+        // start capturing the peak
+        state.max_value = reading;
+        state.peak_end_time_us = current_time_us + PIEZO_CAPTURE_TIME_US;
+        state.ready_for_trigger = false;
+    }
 }
