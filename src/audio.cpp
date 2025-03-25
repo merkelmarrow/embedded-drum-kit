@@ -5,9 +5,11 @@
 #include "src/configs.hpp"
 #include "src/snare.hpp"
 #include <cstdint>
+#include <cstring>
 #include <hardware/dma.h>
 #include <hardware/gpio.h>
 #include <hardware/irq.h>
+#include <hardware/regs/intctrl.h>
 #include <hardware/spi.h>
 #include <hardware/structs/io_bank0.h>
 
@@ -115,4 +117,28 @@ AudioEngine::AudioEngine()
       // don't start the dma chain yet
       // it will be triggered by the IRQ handler when the main DMA completes
       false);
+
+  // DMA_IRQ_0 represents the interrupt request line for DMA channel 0
+  // dmaIRQHandler() is our function that will be called when the DMA transfer
+  // completes "exclusive" means this handler will be the only handler for this
+  // interrupt
+  irq_set_exclusive_handler(DMA_IRQ_0, dmaIRQHandler);
+  dma_channel_set_irq0_enabled(dma_channel_, true);
+
+  // enable global interrupt for the DMA controller
+  irq_set_enabled(DMA_IRQ_0, true);
+
+  // clear the audio buffers to start with silence
+  memset(audio_buffer_A_.data(), 0, AUDIO_BUFFER_SIZE * sizeof(uint16_t));
+  memset(audio_buffer_B_.data(), 0, AUDIO_BUFFER_SIZE * sizeof(uint16_t));
+
+  // fill first buffer with the first chunk of audio data
+  // fillAudioBuffer will mix the active voices to fill the buffer
+  fillAudioBuffer(audio_buffer_A_.data(), AUDIO_BUFFER_SIZE);
+
+  // configure and start the first dma channel immediately
+  // &spi_get_hw(spi_)->dr, destination is the SPI data register (to send to the
+  // dac)
+  dma_channel_configure(dma_channel_, &dma_config, &spi_get_hw(spi_)->dr,
+                        audio_buffer_A_.data(), AUDIO_BUFFER_SIZE, true);
 }

@@ -25,8 +25,10 @@ public:
   AudioEngine();
   ~AudioEngine() = default;
 
-  void play_sound(uint8_t drum_id, uint16_t velocity);
-  void fill_audio_buffer(uint16_t *buffer, uint32_t length);
+  void playSound(uint8_t drum_id, uint16_t velocity);
+  void fillAudioBuffer(uint16_t *buffer, uint32_t length);
+
+  static void dmaIRQHandler();
 
 private:
   std::array<DrumSample, NUM_DRUM_SAMPLES> samples_;
