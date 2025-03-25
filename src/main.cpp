@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <pico/stdlib.h>
 
-#include "configs.hpp"
 #include "piezo.hpp"
 
 
