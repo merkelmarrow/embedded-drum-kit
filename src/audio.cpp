@@ -138,9 +138,10 @@ AudioEngine::AudioEngine()
   memset(audio_buffer_A_.data(), 0, AUDIO_BUFFER_SIZE * sizeof(uint16_t));
   memset(audio_buffer_B_.data(), 0, AUDIO_BUFFER_SIZE * sizeof(uint16_t));
 
-  // fill first buffer with the first chunk of audio data
+  // fill both buffers before starting playback
   // fillAudioBuffer will mix the active voices to fill the buffer
   fillAudioBuffer(audio_buffer_A_.data(), AUDIO_BUFFER_SIZE);
+  fillAudioBuffer(audio_buffer_B_.data(), AUDIO_BUFFER_SIZE);
 
   // configure and start the first dma channel immediately
   // &spi_get_hw(spi_)->dr, destination is the SPI data register (to send to the
@@ -204,21 +205,33 @@ void AudioEngine::dmaIRQHandler() {
 
   // determine which buffer just finished
   if (audioEngine.buffer_flip_) {
-    // just finished buffer B, prepare buffer A
-    audioEngine.fillAudioBuffer(audioEngine.audio_buffer_A_.data(),
-                                AUDIO_BUFFER_SIZE);
-
-    // update dma read source to point to buffer B
+    // first set up chain dma to immediately point to the already-filled buffer
+    // A
     dma_channel_set_read_addr(audioEngine.chain_dma_channel_,
                               audioEngine.audio_buffer_A_.data(), false);
 
-    audioEngine.buffer_flip_ = false;
-  } else {
-    // just finished buffer A, prepare buffer B
+    // start the chain DMA to update main DMA's read address to buffer A
+    dma_channel_start(audioEngine.chain_dma_channel_);
+
+    // secondly, fille buffer B for the next time it will be needed
     audioEngine.fillAudioBuffer(audioEngine.audio_buffer_B_.data(),
                                 AUDIO_BUFFER_SIZE);
+
+    audioEngine.buffer_flip_ = false;
+  } else {
+    // Buffer A just finished
+
+    // first set up chain DMA to immediately point to the already-filled buffer
+    // B
     dma_channel_set_read_addr(audioEngine.chain_dma_channel_,
                               audioEngine.audio_buffer_B_.data(), false);
+
+    // start the chain DMA to update main DMA's read address to buffer B
+    dma_channel_start(audioEngine.chain_dma_channel_);
+
+    // secondly, fill buffer A for the NEXT time it will be needed
+    audioEngine.fillAudioBuffer(audioEngine.audio_buffer_A_.data(),
+                                AUDIO_BUFFER_SIZE);
 
     audioEngine.buffer_flip_ = true;
   }

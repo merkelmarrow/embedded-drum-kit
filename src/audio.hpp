@@ -55,3 +55,5 @@ private:
   // helper method to convert signed samples to unsigned centred at 2048 for DAC
   static inline uint16_t convertToDacFormat(int16_t sample);
 };
+
+AudioEngine audioEngine;
