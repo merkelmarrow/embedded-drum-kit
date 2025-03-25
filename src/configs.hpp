@@ -5,7 +5,7 @@
 #include <cstdint>
 
 // Uncomment the next line to enable debugging statements
-#define DEBUG_ENABLED
+//#define DEBUG_ENABLED
 
 // Uncomment the next line to enable function call statements
 //#define FUNCTION_CALL_DEBUG
@@ -50,7 +50,7 @@ constexpr uint8_t ADC2_PIN = 28; // for a potentiometer
 constexpr uint8_t LOWEST_MUX_IN = 5;
 
 
-constexpr uint16_t BASE_PIEZO_THRESHOLD = 50;
+constexpr uint16_t BASE_PIEZO_THRESHOLD = 100;
 // kept as an array in case some piezos are more sensitive than others (due to component variations)
 constexpr uint16_t PIEZO_THRESHOLD[NUM_PIEZOS] = {
     BASE_PIEZO_THRESHOLD, BASE_PIEZO_THRESHOLD
