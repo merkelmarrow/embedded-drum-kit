@@ -7,7 +7,7 @@
 namespace {
     // helper function to round up to nearest integer
     int roundup_div(int n, int d) {
-        return (n + d - 1) / d;
+        return (n + d - 1) / d; // uses integer division which truncates
     }
 }
 
@@ -26,6 +26,9 @@ constexpr uint8_t ADC1_PIN = 27; // for another 3 piezos
 constexpr uint8_t ADC2_PIN = 28; // for a potentiometer
 
 // ie. if A5 is the lowest mux input used, then LOWEST_MUX_IN = 5
+// note that the inputs in have to be used sequentially after the lowest
+// for some of the logic to work
+// ie. A5, A6 and A7
 constexpr uint8_t LOWEST_MUX_IN = 5;
 
 
@@ -41,6 +44,6 @@ constexpr uint16_t PIEZO_THRESHOLD[NUM_PIEZOS] = {
 // time (us) = time (ms) * 1000
 constexpr uint32_t PIEZO_RECOVERY_TIME_US = 50 * 1000;
 
-// piezo capture time (time after first sample above threshold to look for the max value of the peak)
+// piezo capture time (time after first trigger to look for the max value of the peak)
 // time (us) = time (ms) * 1000
 constexpr uint32_t PIEZO_CAPTURE_TIME_US = 1 * 1000;
