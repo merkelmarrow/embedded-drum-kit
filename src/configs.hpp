@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 // Uncomment the next line to enable debugging statements
-// #define DEBUG_ENABLED
+#define DEBUG_ENABLED
 
 // Uncomment the next line to enable function call statements
 // #define FUNCTION_CALL_DEBUG
@@ -60,7 +60,7 @@ constexpr uint16_t PIEZO_THRESHOLD[NUM_PIEZOS] = {BASE_PIEZO_THRESHOLD,
 
 // the velocity value from a piezo hit that will result in max velocity sound
 // every hit harder than that will be max velocity
-constexpr uint16_t HARDEST_HIT_PIEZO_VELOCITY = 1200;
+constexpr uint16_t HARDEST_HIT_PIEZO_VELOCITY = 800;
 
 // piezo recovery time in microsends (after a strike)
 // time (us) = time (ms) * 1000

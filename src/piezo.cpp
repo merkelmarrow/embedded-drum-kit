@@ -72,12 +72,12 @@ void Piezo::update() {
   uint16_t raw0 = adc_read();
   adc_select_input(1);
   uint16_t raw1 = adc_read();
-  DEBUG_PRINT("Readings: %d and %d\n", raw0, raw1);
+  // DEBUG_PRINT("Readings: %d and %d\n", raw0, raw1);
 
   // get the respective piezo indices
   int piezo_index_A = mux_channel_index_;
   int piezo_index_B = mux_channel_index_ + HALF_NUM_PIEZOS;
-  DEBUG_PRINT("Piezo indices: %d and %d\n", piezo_index_A, piezo_index_B);
+  // DEBUG_PRINT("Piezo indices: %d and %d\n", piezo_index_A, piezo_index_B);
 
   uint32_t current_time_us = time_us_32();
 

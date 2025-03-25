@@ -24,10 +24,17 @@ AudioEngine::AudioEngine()
     : dma_channel_(dma_claim_unused_channel(true)),
       chain_dma_channel_(dma_claim_unused_channel(true)) {
   FUNCTION_PRINT("AudioEngine::AudioEngine\n");
+  DEBUG_PRINT("Claimed DMA channels: Main=%d, Chain=%d\n", dma_channel_,
+              chain_dma_channel_);
+
+  DEBUG_PRINT("Initializing samples: Kick length=%lu, Snare length=%lu\n",
+              KICK_LENGTH, SNARE_LENGTH);
 
   // initialise sample data
   samples_[0] = {(const int16_t *)kick, KICK_LENGTH};
   samples_[1] = {(const int16_t *)snare, SNARE_LENGTH};
+
+  DEBUG_PRINT("Initializing SPI on spi0 at %lu baud\n", SPI_BAUD_RATE);
 
   spi_init(spi_, SPI_BAUD_RATE);
 
@@ -42,6 +49,11 @@ AudioEngine::AudioEngine()
   // SPI_MSB_FIRST: most sig bit transmitted first
   spi_set_format(spi_, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
 
+  DEBUG_PRINT("SPI format set: 16-bit, CPOL=0, CPHA=0, MSB first\n");
+
+  DEBUG_PRINT("Setting SPI pins: SCK=%d, MOSI=%d, CS=%d\n", DAC_SCK_PIN,
+              DAC_MOSI_PIN, DAC_CS_PIN);
+
   // set the DAC pins to SPI
   gpio_set_function(DAC_SCK_PIN, GPIO_FUNC_SPI);
   gpio_set_function(DAC_MOSI_PIN, GPIO_FUNC_SPI);
@@ -50,6 +62,8 @@ AudioEngine::AudioEngine()
   // set up PWM for timer-based sample triggering
   // choose a PWM slice (0-7)
   uint slice_num = pwm_gpio_to_slice_num(PWM_TIMER_PIN);
+  DEBUG_PRINT("Configuring PWM on slice %d, pin %d\n", slice_num,
+              PWM_TIMER_PIN);
 
   // calculate PWM clock divider and wrap value to get precise sample rate
   float clock_div = 1.0f; // Start with no division
@@ -63,6 +77,9 @@ AudioEngine::AudioEngine()
         (uint32_t)(PICO_CLOCK_SPEED / (clock_div * SAMPLE_RATE_HZ)) - 1;
   }
 
+  DEBUG_PRINT("PWM settings - Clock div: %.2f, Wrap value: %lu\n", clock_div,
+              wrap_value);
+
   // Configure the PWM slice for our sample rate timer
   pwm_config pwm_config = pwm_get_default_config();
   pwm_config_set_clkdiv(&pwm_config, clock_div);
@@ -71,6 +88,8 @@ AudioEngine::AudioEngine()
 
   // Set compare value to 1 - we just need a short pulse for the DMA trigger
   pwm_set_chan_level(slice_num, PWM_CHAN_A, 1);
+
+  DEBUG_PRINT("PWM initialized, not started yet\n");
 
   // MAIN DMA CONFIG
 
@@ -96,6 +115,10 @@ AudioEngine::AudioEngine()
   // so each sample goes to the same hardware destination
   channel_config_set_write_increment(&dma_config, false);
 
+  DEBUG_PRINT("Main DMA config - Size: 16-bit, DREQ: PWM_WRAP%d, Read inc: "
+              "true, Write inc: false\n",
+              slice_num);
+
   // CHAIN DMA CONFIG
   // the chain DMA is a second DMA channel that automatically reconfigures
   // the mian DMA channel when it finished the buffer
@@ -119,6 +142,9 @@ AudioEngine::AudioEngine()
   // when the chain DMA finishes, it will automatically restart the main DMA
   // channel this creates a continuous cycle, main DMA -> chain DMA -> main DMA
   channel_config_set_chain_to(&chain_config, dma_channel_);
+  DEBUG_PRINT("Chain DMA config - Size: 32-bit, Read inc: false, Write inc: "
+              "false, Chain to: %d\n",
+              dma_channel_);
 
   // this function configures the detail of the DMA
   dma_channel_configure(
@@ -150,6 +176,8 @@ AudioEngine::AudioEngine()
       // it will be triggered by the IRQ handler when the main DMA completes
       false);
 
+  DEBUG_PRINT("Chain DMA configured, not started\n");
+
   // DMA_IRQ_0 represents the interrupt request line for DMA channel 0
   // dmaIRQHandler() is our function that will be called when the DMA transfer
   // completes "exclusive" means this handler will be the only handler for this
@@ -162,15 +190,22 @@ AudioEngine::AudioEngine()
 
   // enable global interrupt for the DMA controller
   irq_set_enabled(DMA_IRQ_0, true);
+  DEBUG_PRINT("DMA IRQ enabled\n");
+
+  DEBUG_PRINT("Clearing audio buffers\n");
 
   // clear the audio buffers to start with silence
   memset(audio_buffer_A_.data(), 0, AUDIO_BUFFER_SIZE * sizeof(uint16_t));
   memset(audio_buffer_B_.data(), 0, AUDIO_BUFFER_SIZE * sizeof(uint16_t));
 
+  DEBUG_PRINT("Filling initial audio buffers\n");
+
   // fill both buffers before starting playback
   // fillAudioBuffer will mix the active voices to fill the buffer
   fillAudioBuffer(audio_buffer_A_.data(), AUDIO_BUFFER_SIZE);
   fillAudioBuffer(audio_buffer_B_.data(), AUDIO_BUFFER_SIZE);
+
+  DEBUG_PRINT("Starting main DMA with buffer A\n");
 
   // configure and start the first dma channel immediately
   // &spi_get_hw(spi_)->dr, destination is the SPI data register (to send to the
@@ -178,12 +213,14 @@ AudioEngine::AudioEngine()
   dma_channel_configure(dma_channel_, &dma_config, &spi_get_hw(spi_)->dr,
                         audio_buffer_A_.data(), AUDIO_BUFFER_SIZE, true);
 
+  DEBUG_PRINT("Starting PWM to trigger DMA\n");
   // start the pwm which will trigger the dma
   pwm_set_enabled(slice_num, true);
 }
 
 void AudioEngine::fillAudioBuffer(uint16_t *buffer, uint32_t length) {
   FUNCTION_PRINT("AudioEngine::fillAudioBuffer\n");
+  DEBUG_PRINT("Filling buffer at %p, length=%lu\n", buffer, length);
 
   // fill buffer with mixed audio
   for (uint32_t i = 0; i < length; i++) {
@@ -206,6 +243,8 @@ void AudioEngine::fillAudioBuffer(uint16_t *buffer, uint32_t length) {
 
           ++voice.position; // increment the voice's position in the array
         } else {
+          DEBUG_PRINT("Voice %d ended at position %lu\n", voice.drum_id,
+                      voice.position);
           // end of sample reached
           voice.active = false;
         }
@@ -220,6 +259,7 @@ void AudioEngine::fillAudioBuffer(uint16_t *buffer, uint32_t length) {
 
     buffer[i] = convertToDacFormat((int16_t)mix_sum);
   }
+  DEBUG_PRINT("Buffer filled, sample[0]=0x%04x\n", buffer[0]);
 }
 
 uint16_t AudioEngine::convertToDacFormat(int16_t sample) {
@@ -234,9 +274,12 @@ uint16_t AudioEngine::convertToDacFormat(int16_t sample) {
 void AudioEngine::dmaIRQHandler() {
   // clear the interrupt
   dma_hw->ints0 = 1u << audioEngine.dma_channel_;
+  DEBUG_PRINT("DMA IRQ triggered, channel %d cleared\n",
+              audioEngine.dma_channel_);
 
   // determine which buffer just finished
   if (audioEngine.buffer_flip_) {
+    DEBUG_PRINT("Switching to buffer A\n");
     // first set up chain dma to immediately point to the already-filled buffer
     // A
     dma_channel_set_read_addr(audioEngine.chain_dma_channel_,
@@ -251,6 +294,7 @@ void AudioEngine::dmaIRQHandler() {
 
     audioEngine.buffer_flip_ = false;
   } else {
+    DEBUG_PRINT("Switching to buffer B\n");
     // Buffer A just finished
 
     // first set up chain DMA to immediately point to the already-filled buffer
@@ -273,10 +317,13 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
   if (drum_id >= NUM_DRUM_SAMPLES)
     return;
 
+  DEBUG_PRINT("Playing sound: drum_id=%d, velocity=%d\n", drum_id, velocity);
+
   uint16_t normalised_velocity = 0;
 
   if (velocity > HARDEST_HIT_PIEZO_VELOCITY) {
     normalised_velocity = TWELVE_BIT_MAX; // cap at maximum
+    DEBUG_PRINT("Velocity capped at %d\n", TWELVE_BIT_MAX);
   } else {
     // linear mapping: (val - inMin) * (outMax - outMin) / (inMax - inMin) +
     // outMin
@@ -290,6 +337,7 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
     normalised_velocity =
         (uint16_t)((velocity - BASE_PIEZO_THRESHOLD) * TWELVE_BIT_MAX /
                    (HARDEST_HIT_PIEZO_VELOCITY - BASE_PIEZO_THRESHOLD));
+    DEBUG_PRINT("Velocity normalized to %d\n", normalised_velocity);
   }
 
   // find first inactive voice and occupy it
@@ -299,8 +347,8 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
       voice.drum_id = drum_id;
       voice.position = 0;
       voice.velocity = normalised_velocity;
-      DEBUG_PRINT("Voice allocated for sample %d with normalised velocity %d\n",
-                  drum_id, normalised_velocity);
+      DEBUG_PRINT("Voice allocated - Drum %d, Velocity %d\n", drum_id,
+                  normalised_velocity);
       return;
     }
   }
