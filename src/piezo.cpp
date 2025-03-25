@@ -66,23 +66,23 @@ void Piezo::update() {
     adc_select_input(1);
     uint16_t raw1 = adc_read();
 
-
+    // get the respective piezo indices
     int piezo_index_A = mux_channel_index_;
     int piezo_index_B = mux_channel_index_ + HALF_NUM_PIEZOS;
 
     uint32_t current_time_us = time_us_32();
 
+    processPiezoReading(piezo_index_A, raw0, current_time_us);
+    processPiezoReading(piezo_index_B, raw1, current_time_us);
 
-
-
-    
+    // update mux channel index for next update
     mux_channel_index_ = (mux_channel_index_ + 1) % HALF_NUM_PIEZOS;
-    // select next mux channel for next update
+    // select next mux channel to be ready
     selectMuxChannel(mux_channel_index_);
 
 }
 
-void Piezo::processPiezoReading(int piezo_index, uint16_t reading, uint32_t current_time_us) {
+void Piezo::processPiezoReading(uint8_t piezo_index, uint16_t reading, uint32_t current_time_us) {
     if (piezo_index >= NUM_PIEZOS) return;
 
     // access the piezo's current state (reference to avoid copying)
@@ -104,7 +104,6 @@ void Piezo::processPiezoReading(int piezo_index, uint16_t reading, uint32_t curr
             if (piezo_callback_) {
                 piezo_callback_(piezo_index, state.max_value);
             }
-
             state.ready_for_trigger = true;
             state.recovery_end_time_us = current_time_us + (PIEZO_RECOVERY_TIME_US);
         }

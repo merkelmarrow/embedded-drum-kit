@@ -7,7 +7,7 @@
 
 #include "configs.hpp"
 
-typedef void (*PiezoCallback)(int piezo_index, uint16_t velocity);
+typedef void (*PiezoCallback)(uint8_t piezo_index, uint16_t velocity);
 
 // each pizeo is stateful, they need to remember if they are sampling inside the debounce time,
 // what the peak measurement of any particular strike was, etc.
@@ -40,6 +40,8 @@ class Piezo {
 
     // helper: selects a given channel on the multiplexer (using the select outputs)
     void selectMuxChannel(uint8_t channel);
-    void processPiezoReading(int piezo_index, uint16_t reading, uint32_t current_time_us);
+
+    // process each piezo reading and update it's state
+    void processPiezoReading(uint8_t piezo_index, uint16_t reading, uint32_t current_time_us);
 
 };
