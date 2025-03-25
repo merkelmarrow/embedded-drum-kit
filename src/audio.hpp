@@ -56,4 +56,4 @@ private:
   static inline uint16_t convertToDacFormat(int16_t sample);
 };
 
-AudioEngine audioEngine;
+extern AudioEngine audioEngine;

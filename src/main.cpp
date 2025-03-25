@@ -11,7 +11,8 @@
 
 // callback function for sensor triggers
 void drumHitCallback(uint8_t piezo_index, uint16_t velocity) {
-  printf("Drum hit detected: Piezo %d, Velocity %d\n", piezo_index, velocity);
+  DEBUG_PRINT("Drum hit detected: Piezo %d, Velocity %d\n", piezo_index,
+              velocity);
 
   audioEngine.playSound(piezo_index, velocity);
 }

@@ -55,11 +55,13 @@ void Piezo::selectMuxChannel(uint8_t channel) {
   // random instructions to delay by 4-7 instructions since there will
   // definitely be more instructions between reads it saves us from having to
   // think about it somewhere else
-  int delay = 0x1;
-  delay ^= 0x1;
-  delay += 0x2;
-  delay -= 0x1;
-  delay &= 0x2;
+
+  // NOT NECESSARY FOR NOW BECAUSE THERE'S ONLY 2 PIEZOS RIGHT NOW
+  // int delay = 0x1;
+  // delay ^= 0x1;
+  // delay += 0x2;
+  // delay -= 0x1;
+  // delay &= 0x2;
 }
 
 // function polls two of the piezos and updates which two piezos to poll next

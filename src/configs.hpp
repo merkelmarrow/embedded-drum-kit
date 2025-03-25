@@ -4,6 +4,9 @@
 
 #include <cstdint>
 
+// not used here directly but used by macros
+#include <stdio.h>
+
 // Uncomment the next line to enable debugging statements
 // #define DEBUG_ENABLED
 
@@ -82,4 +85,4 @@ constexpr uint8_t DAC_MOSI_PIN = 19;
 constexpr uint8_t DAC_CS_PIN = 17;
 
 constexpr uint16_t TWELVE_BIT_MAX = 4095;
-constexpr uint16_t TWELVE_BIT_HALFWAY = 2046;
+constexpr uint16_t TWELVE_BIT_HALFWAY = 2048;

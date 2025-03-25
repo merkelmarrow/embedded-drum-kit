@@ -1,10 +1,10 @@
 // src/audio.cpp
 
 #include "audio.hpp"
-#include "kick.hpp"
+#include "configs.hpp"
 
-#include "src/configs.hpp"
-#include "src/snare.hpp"
+#include "kick.hpp"
+#include "snare.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -44,7 +44,11 @@ AudioEngine::AudioEngine()
   // set the DAC pins to SPI
   gpio_set_function(DAC_SCK_PIN, GPIO_FUNC_SPI);
   gpio_set_function(DAC_MOSI_PIN, GPIO_FUNC_SPI);
-  gpio_set_function(DAC_CS_PIN, GPIO_FUNC_SPI);
+
+  // Manually control CS pin for better timing with the DAC
+  gpio_init(DAC_CS_PIN);
+  gpio_set_dir(DAC_CS_PIN, GPIO_OUT);
+  gpio_put(DAC_CS_PIN, 1); // Initially inactive (high)
 
   // MAIN DMA CONFIG
 
@@ -129,6 +133,9 @@ AudioEngine::AudioEngine()
   // completes "exclusive" means this handler will be the only handler for this
   // interrupt
   irq_set_exclusive_handler(DMA_IRQ_0, dmaIRQHandler);
+
+  // Set higher priority for DMA IRQ to ensure timely buffer swapping
+  irq_set_priority(DMA_IRQ_0, 0x40);
   dma_channel_set_irq0_enabled(dma_channel_, true);
 
   // enable global interrupt for the DMA controller
@@ -142,6 +149,9 @@ AudioEngine::AudioEngine()
   // fillAudioBuffer will mix the active voices to fill the buffer
   fillAudioBuffer(audio_buffer_A_.data(), AUDIO_BUFFER_SIZE);
   fillAudioBuffer(audio_buffer_B_.data(), AUDIO_BUFFER_SIZE);
+
+  // Pull CS low to activate the DAC
+  gpio_put(DAC_CS_PIN, 0);
 
   // configure and start the first dma channel immediately
   // &spi_get_hw(spi_)->dr, destination is the SPI data register (to send to the
@@ -235,8 +245,6 @@ void AudioEngine::dmaIRQHandler() {
 
     audioEngine.buffer_flip_ = true;
   }
-
-  dma_channel_start(audioEngine.chain_dma_channel_);
 }
 
 void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
