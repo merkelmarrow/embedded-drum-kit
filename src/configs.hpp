@@ -12,7 +12,7 @@ namespace {
 }
 
 // Half num piezos should be greater than half the number of piezos
-constexpr uint8_t NUM_PIEZOS = 6;
+constexpr uint8_t NUM_PIEZOS = 2;
 
 // don't touch
 const uint8_t HALF_NUM_PIEZOS = roundup_div(NUM_PIEZOS, 2);
@@ -35,8 +35,6 @@ constexpr uint8_t LOWEST_MUX_IN = 5;
 constexpr uint16_t BASE_PIEZO_THRESHOLD = 1000;
 // kept as an array in case some piezos are more sensitive than others (due to component variations)
 constexpr uint16_t PIEZO_THRESHOLD[NUM_PIEZOS] = {
-    BASE_PIEZO_THRESHOLD, BASE_PIEZO_THRESHOLD, 
-    BASE_PIEZO_THRESHOLD, BASE_PIEZO_THRESHOLD, 
     BASE_PIEZO_THRESHOLD, BASE_PIEZO_THRESHOLD
 };
 
