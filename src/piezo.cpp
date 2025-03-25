@@ -11,7 +11,7 @@ Piezo::Piezo() {
   adc_init();
 
   // Set maximum sample rate for the ADC
-  adc_set_clkdiv(0);
+  adc_set_clkdiv(1.0f);
 
   adc_gpio_init(ADC0_PIN);
   adc_gpio_init(ADC1_PIN);

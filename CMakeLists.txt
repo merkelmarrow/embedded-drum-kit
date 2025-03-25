@@ -61,6 +61,7 @@ target_link_libraries(pico-drum-kit
         hardware_timer
         hardware_clocks
         hardware_adc
+        hardware_pwm
         )
 
 pico_add_extra_outputs(pico-drum-kit)

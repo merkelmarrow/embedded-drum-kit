@@ -12,6 +12,7 @@
 #include <hardware/dma.h>
 #include <hardware/gpio.h>
 #include <hardware/irq.h>
+#include <hardware/pwm.h>
 #include <hardware/regs/intctrl.h>
 #include <hardware/spi.h>
 #include <hardware/structs/dma.h>
@@ -44,11 +45,33 @@ AudioEngine::AudioEngine()
   // set the DAC pins to SPI
   gpio_set_function(DAC_SCK_PIN, GPIO_FUNC_SPI);
   gpio_set_function(DAC_MOSI_PIN, GPIO_FUNC_SPI);
+  gpio_set_function(DAC_CS_PIN, GPIO_FUNC_SPI);
 
-  // Manually control CS pin for better timing with the DAC
-  gpio_init(DAC_CS_PIN);
-  gpio_set_dir(DAC_CS_PIN, GPIO_OUT);
-  gpio_put(DAC_CS_PIN, 1); // Initially inactive (high)
+  // Set up PWM for timer-based sample triggering
+  // Choose a PWM slice (0-7)
+  uint slice_num = pwm_gpio_to_slice_num(PWM_TIMER_PIN);
+
+  // Calculate PWM clock divider and wrap value to get precise sample rate
+  // The RP2040 clock runs at 125MHz by default
+  float clock_div = 1.0f; // Start with no division
+  uint32_t wrap_value =
+      (uint32_t)(PICO_CLOCK_SPEED / (clock_div * SAMPLE_RATE_HZ)) - 1;
+
+  // Adjust if wrap_value is outside valid range (0-65535)
+  while (wrap_value > 65535) {
+    clock_div *= 2.0f;
+    wrap_value =
+        (uint32_t)(PICO_CLOCK_SPEED / (clock_div * SAMPLE_RATE_HZ)) - 1;
+  }
+
+  // Configure the PWM slice for our sample rate timer
+  pwm_config pwm_config = pwm_get_default_config();
+  pwm_config_set_clkdiv(&pwm_config, clock_div);
+  pwm_config_set_wrap(&pwm_config, wrap_value);
+  pwm_init(slice_num, &pwm_config, false); // Don't start yet
+
+  // Set compare value to 1 - we just need a short pulse for the DMA trigger
+  pwm_set_chan_level(slice_num, PWM_CHAN_A, 1);
 
   // MAIN DMA CONFIG
 
@@ -64,7 +87,7 @@ AudioEngine::AudioEngine()
   // this makes the DMA wait for the SPI TX FIFO to have room before
   // transferring each piece of data, ensuring synchronisation.
   // the "true" parameter means we're requesting for TX not RX
-  channel_config_set_dreq(&dma_config, spi_get_dreq(spi_, true));
+  channel_config_set_dreq(&dma_config, DREQ_PWM_WRAP0 + slice_num);
 
   // configure the DMA to incremement its read address after each transfer
   channel_config_set_read_increment(&dma_config, true);
@@ -150,14 +173,14 @@ AudioEngine::AudioEngine()
   fillAudioBuffer(audio_buffer_A_.data(), AUDIO_BUFFER_SIZE);
   fillAudioBuffer(audio_buffer_B_.data(), AUDIO_BUFFER_SIZE);
 
-  // Pull CS low to activate the DAC
-  gpio_put(DAC_CS_PIN, 0);
-
   // configure and start the first dma channel immediately
   // &spi_get_hw(spi_)->dr, destination is the SPI data register (to send to the
   // dac)
   dma_channel_configure(dma_channel_, &dma_config, &spi_get_hw(spi_)->dr,
                         audio_buffer_A_.data(), AUDIO_BUFFER_SIZE, true);
+
+  // start the pwm which will trigger the dma
+  pwm_set_enabled(slice_num, true);
 }
 
 void AudioEngine::fillAudioBuffer(uint16_t *buffer, uint32_t length) {
