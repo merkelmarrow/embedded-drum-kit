@@ -40,6 +40,6 @@ class Piezo {
 
     // helper: selects a given channel on the multiplexer (using the select outputs)
     void selectMuxChannel(uint8_t channel);
-    void process_piezo_reading(int piezo_index, uint16_t reading, uint32_t current_time_us);
+    void processPiezoReading(int piezo_index, uint16_t reading, uint32_t current_time_us);
 
 };

@@ -82,7 +82,7 @@ void Piezo::update() {
 
 }
 
-void Piezo::process_piezo_reading(int piezo_index, uint16_t reading, uint32_t current_time_us) {
+void Piezo::processPiezoReading(int piezo_index, uint16_t reading, uint32_t current_time_us) {
     if (piezo_index >= NUM_PIEZOS) return;
 
     // access the piezo's current state (reference to avoid copying)
