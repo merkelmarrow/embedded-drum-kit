@@ -3,7 +3,6 @@
 #include "configs.hpp"
 #include "hardware/adc.h"
 #include <hardware/timer.h>
-#include <stdio.h>
 
 #include "piezo.hpp"
 
@@ -25,6 +24,8 @@ Piezo::Piezo() {
     gpio_set_dir(MUX_S0_PIN, GPIO_OUT);
     gpio_init(MUX_S1_PIN);
     gpio_set_dir(MUX_S1_PIN, GPIO_OUT);
+    gpio_init(MUX_S2_PIN);
+    gpio_set_dir(MUX_S2_PIN, GPIO_OUT);
 
     // default mux channel is 0
     selectMuxChannel(0);
@@ -44,6 +45,16 @@ void Piezo::selectMuxChannel(uint8_t channel) {
     // adding 5 to all the binary outputs just for space reasons on the breadboard
     // (A5-A7 are on the left of the mux, while A0-A2 are on the right)
     uint8_t binary_ch = channel + LOWEST_MUX_IN;
+
+    uint8_t s0, s1, s2;
+    s0 = binary_ch & 0x1;
+    s1 = (binary_ch >> 1) & 0x1;
+    s2 = (binary_ch >> 2) & 0x1;
+
+    printf("S0 = %d\n", s0);
+    printf("S1 = %d\n", s1);
+    printf("S2 = %d\n", s2);
+
 
     gpio_put(MUX_S0_PIN, binary_ch & 0x1);
     gpio_put(MUX_S1_PIN, (binary_ch >> 1) & 0x1);
@@ -69,10 +80,12 @@ void Piezo::update() {
     uint16_t raw0 = adc_read();
     adc_select_input(1);
     uint16_t raw1 = adc_read();
+    printf("Readings: %d and %d\n", raw0, raw1);
 
     // get the respective piezo indices
     int piezo_index_A = mux_channel_index_;
     int piezo_index_B = mux_channel_index_ + HALF_NUM_PIEZOS;
+    printf("Piezo indices: %d and %d\n", piezo_index_A, piezo_index_B);
 
     uint32_t current_time_us = time_us_32();
 

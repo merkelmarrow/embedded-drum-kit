@@ -1,6 +1,7 @@
 // src/main.cpp
 
 #include <pico/stdio.h>
+#include <pico/time.h>
 #include <stdio.h>
 #include <pico/stdlib.h>
 
@@ -27,6 +28,7 @@ int main() {
 
     while (true) {
         piezo.update();
+        sleep_ms(1000);
     }
 
     return 0;
