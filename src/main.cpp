@@ -22,13 +22,13 @@ int main() {
 
     sleep_ms(10000); // wait for serial monitor connection
     printf("main\n");
+
     Piezo piezo;
 
     piezo.setPiezoCallback(drumHitCallback);
 
     while (true) {
         piezo.update();
-        sleep_ms(1000);
     }
 
     return 0;
