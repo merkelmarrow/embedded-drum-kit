@@ -82,3 +82,4 @@ constexpr uint8_t DAC_MOSI_PIN = 19;
 constexpr uint8_t DAC_CS_PIN = 17;
 
 constexpr uint16_t TWELVE_BIT_MAX = 4095;
+constexpr uint16_t TWELVE_BIT_HALFWAY = 2046;

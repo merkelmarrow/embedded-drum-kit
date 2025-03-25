@@ -217,13 +217,13 @@ void AudioEngine::dmaIRQHandler() {
     // just finished buffer A, prepare buffer B
     audioEngine.fillAudioBuffer(audioEngine.audio_buffer_B_.data(),
                                 AUDIO_BUFFER_SIZE);
-    dma_channel_set_read_addr(audioEngine.dma_channel_,
+    dma_channel_set_read_addr(audioEngine.chain_dma_channel_,
                               audioEngine.audio_buffer_B_.data(), false);
 
     audioEngine.buffer_flip_ = true;
   }
 
-  dma_channel_start(audioEngine.dma_channel_);
+  dma_channel_start(audioEngine.chain_dma_channel_);
 }
 
 void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
@@ -232,8 +232,8 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
 
   uint16_t normalised_velocity = 0;
 
-  if (velocity > 1200) {
-    normalised_velocity = 4095; // cap at maximum
+  if (velocity > HARDEST_HIT_PIEZO_VELOCITY) {
+    normalised_velocity = TWELVE_BIT_MAX; // cap at maximum
   } else {
     // linear mapping: (val - inMin) * (outMax - outMin) / (inMax - inMin) +
     // outMin
@@ -249,6 +249,7 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
                    (HARDEST_HIT_PIEZO_VELOCITY - BASE_PIEZO_THRESHOLD));
   }
 
+  // find first inactive voice and occupy it
   for (auto &voice : voices_) {
     if (!voice.active) {
       voice.active = true;
