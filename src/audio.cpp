@@ -225,3 +225,59 @@ void AudioEngine::dmaIRQHandler() {
 
   dma_channel_start(audioEngine.dma_channel_);
 }
+
+void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
+  if (drum_id >= NUM_DRUM_SAMPLES)
+    return;
+
+  uint16_t normalised_velocity = 0;
+
+  if (velocity > 1200) {
+    normalised_velocity = 4095; // cap at maximum
+  } else {
+    // linear mapping: (val - inMin) * (outMax - outMin) / (inMax - inMin) +
+    // outMin
+
+    // val = velocity.
+    // inMin = 100.
+    // outMax = 4095.
+    // outMin = 0.
+    // inMax = 1200.
+    // inMin = 100.
+    normalised_velocity =
+        (uint16_t)((velocity - BASE_PIEZO_THRESHOLD) * TWELVE_BIT_MAX /
+                   (HARDEST_HIT_PIEZO_VELOCITY - BASE_PIEZO_THRESHOLD));
+  }
+
+  for (auto &voice : voices_) {
+    if (!voice.active) {
+      voice.active = true;
+      voice.drum_id = drum_id;
+      voice.position = 0;
+      voice.velocity = normalised_velocity;
+      DEBUG_PRINT("Voice allocated for sample %d with normalised velocity %d\n",
+                  drum_id, normalised_velocity);
+      return;
+    }
+  }
+
+  // if no voice is available, find the oldest voice to replace (steal the
+  // voice)
+  uint32_t oldest_position = 0;
+  int oldest_index = -1;
+
+  for (uint8_t i = 0; i < NUM_VOICES; i++) {
+    if (voices_[i].position > oldest_position) {
+      oldest_position = voices_[i].position;
+      oldest_index = i;
+    }
+  }
+
+  if (oldest_index >= 0) {
+    voices_[oldest_index].active = true;
+    voices_[oldest_index].drum_id = drum_id;
+    voices_[oldest_index].position = 0;
+    voices_[oldest_index].velocity = normalised_velocity;
+    DEBUG_PRINT("Voice stolen for sample %d\n", drum_id);
+  }
+}

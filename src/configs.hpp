@@ -55,6 +55,10 @@ constexpr uint16_t BASE_PIEZO_THRESHOLD = 100;
 constexpr uint16_t PIEZO_THRESHOLD[NUM_PIEZOS] = {BASE_PIEZO_THRESHOLD,
                                                   BASE_PIEZO_THRESHOLD};
 
+// the velocity value from a piezo hit that will result in max velocity sound
+// every hit harder than that will be max velocity
+constexpr uint16_t HARDEST_HIT_PIEZO_VELOCITY = 1200;
+
 // piezo recovery time in microsends (after a strike)
 // time (us) = time (ms) * 1000
 // from the waveforms, 50 ms is about right
@@ -76,3 +80,5 @@ constexpr uint32_t SPI_BAUD_RATE = 10000000; // 10 MHz
 constexpr uint8_t DAC_SCK_PIN = 18;
 constexpr uint8_t DAC_MOSI_PIN = 19;
 constexpr uint8_t DAC_CS_PIN = 17;
+
+constexpr uint16_t TWELVE_BIT_MAX = 4095;
