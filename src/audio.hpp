@@ -25,6 +25,8 @@ public:
   AudioEngine();
   ~AudioEngine() = default;
 
+  void init();
+
   void playSound(uint8_t drum_id, uint16_t velocity);
   void fillAudioBuffer(uint16_t *buffer, uint32_t length);
 

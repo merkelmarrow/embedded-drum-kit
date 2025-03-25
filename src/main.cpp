@@ -23,6 +23,8 @@ int main() {
   sleep_ms(5000); // wait for serial monitor connection
   FUNCTION_PRINT("main\n");
 
+  audioEngine.init();
+
   // instantiate the piezo
   // the constructor initialises the ADC and other important stuff
   Piezo piezo;

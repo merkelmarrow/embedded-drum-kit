@@ -17,13 +17,16 @@
 #include <hardware/spi.h>
 #include <hardware/structs/dma.h>
 #include <hardware/structs/io_bank0.h>
+#include <pico/time.h>
 
 AudioEngine audioEngine;
 
 AudioEngine::AudioEngine()
     : dma_channel_(dma_claim_unused_channel(true)),
-      chain_dma_channel_(dma_claim_unused_channel(true)) {
-  FUNCTION_PRINT("AudioEngine::AudioEngine\n");
+      chain_dma_channel_(dma_claim_unused_channel(true)) {}
+
+void AudioEngine::init() {
+  FUNCTION_PRINT("AudioEngine::init\n");
   DEBUG_PRINT("Claimed DMA channels: Main=%d, Chain=%d\n", dma_channel_,
               chain_dma_channel_);
 
@@ -33,6 +36,15 @@ AudioEngine::AudioEngine()
   // initialise sample data
   samples_[0] = {(const int16_t *)kick, KICK_LENGTH};
   samples_[1] = {(const int16_t *)snare, SNARE_LENGTH};
+
+  // Initialize all voices to inactive
+  for (auto &voice : voices_) {
+    voice.active = false;
+    voice.drum_id = 0;
+    voice.position = 0;
+    voice.velocity = 1000;
+  }
+  DEBUG_PRINT("All %d voices initialized\n", NUM_VOICES);
 
   DEBUG_PRINT("Initializing SPI on spi0 at %lu baud\n", SPI_BAUD_RATE);
 
