@@ -6,10 +6,7 @@
 #include <pico/stdlib.h>
 
 #include "piezo.hpp"
-
-
-// instantiate the piezo
-// the constructor initialises the ADC and other important stuff
+#include "src/configs.hpp"
 
 
 // callback function for sensor triggers
@@ -21,8 +18,10 @@ int main() {
     stdio_init_all();
 
     sleep_ms(10000); // wait for serial monitor connection
-    printf("main\n");
+    FUNCTION_PRINT("main\n");
 
+    // instantiate the piezo
+    // the constructor initialises the ADC and other important stuff
     Piezo piezo;
 
     piezo.setPiezoCallback(drumHitCallback);

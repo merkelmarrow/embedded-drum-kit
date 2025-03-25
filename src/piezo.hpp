@@ -27,7 +27,7 @@ class Piezo {
     ~Piezo() = default;
 
     void setPiezoCallback(PiezoCallback cb) { 
-        printf("Piezo::setPiezoCallback\n");
+        FUNCTION_PRINT("Piezo::setPiezoCallback\n");
         piezo_callback_ = cb; 
     }
     void update();

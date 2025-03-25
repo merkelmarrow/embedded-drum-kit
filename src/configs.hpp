@@ -4,6 +4,24 @@
 
 #include <cstdint>
 
+// Uncomment the next line to enable debugging statements
+#define DEBUG_ENABLED
+
+// Uncomment the next line to enable function call statements
+//#define FUNCTION_CALL_DEBUG
+
+#ifdef DEBUG_ENABLED
+    #define DEBUG_PRINT(fmt, ...) printf(fmt, ##__VA_ARGS__)
+#else
+    #define DEBUG_PRINT(fmt, ...) ((void)0)
+#endif
+
+#ifdef FUNCTION_CALL_DEBUG
+    #define FUNCTION_PRINT(fmt, ...) printf(fmt, ##__VA_ARGS__)
+#else
+    #define FUNCTION_PRINT(fmt, ...) ((void)0)
+#endif
+
 namespace {
     // helper function to round up to nearest integer
     int roundup_div(int n, int d) {
@@ -32,7 +50,7 @@ constexpr uint8_t ADC2_PIN = 28; // for a potentiometer
 constexpr uint8_t LOWEST_MUX_IN = 5;
 
 
-constexpr uint16_t BASE_PIEZO_THRESHOLD = 1000;
+constexpr uint16_t BASE_PIEZO_THRESHOLD = 50;
 // kept as an array in case some piezos are more sensitive than others (due to component variations)
 constexpr uint16_t PIEZO_THRESHOLD[NUM_PIEZOS] = {
     BASE_PIEZO_THRESHOLD, BASE_PIEZO_THRESHOLD
