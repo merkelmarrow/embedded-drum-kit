@@ -40,13 +40,13 @@ private:
   // spi and dma config //
 
   // pointer to the RP2350s spi0 SPI controller
-  spi_inst_t *spi = spi0;
+  spi_inst_t *spi_ = spi0;
 
   // just use channel 0
-  uint32_t dma_channel = 0;
+  uint32_t dma_channel_ = 0;
 
   // the second channel used in the double buffer system
   // when the main dma finishes a buffer, this chain DMA updates the
   // main dma to point to the next buffer
-  uint32_t chain_dma_channel = 1;
+  uint32_t chain_dma_channel_ = 1;
 };

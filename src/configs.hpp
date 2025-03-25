@@ -57,15 +57,22 @@ constexpr uint16_t PIEZO_THRESHOLD[NUM_PIEZOS] = {BASE_PIEZO_THRESHOLD,
 
 // piezo recovery time in microsends (after a strike)
 // time (us) = time (ms) * 1000
+// from the waveforms, 50 ms is about right
 constexpr uint32_t PIEZO_RECOVERY_TIME_US = 50 * 1000;
 
 // piezo capture time (time after first trigger to look for the max value of the
 // peak) time (us) = time (ms) * 1000
+// from the waveforms, 1 ms seems to be about right
 constexpr uint32_t PIEZO_CAPTURE_TIME_US = 1 * 1000;
 
 constexpr uint32_t SAMPLE_RATE_HZ = 44100;
 constexpr uint32_t AUDIO_BUFFER_SIZE = 256;
 constexpr uint8_t NUM_VOICES = 8;
-constexpr uint8_t NUM_DRUM_SAMPLES =
-    NUM_PIEZOS; // number of samples stored should match the number of piezos
-                // used
+
+// number of samples stored should match the number of piezos used
+constexpr uint8_t NUM_DRUM_SAMPLES = NUM_PIEZOS;
+
+constexpr uint32_t SPI_BAUD_RATE = 10000000; // 10 MHz
+constexpr uint8_t DAC_SCK_PIN = 18;
+constexpr uint8_t DAC_MOSI_PIN = 19;
+constexpr uint8_t DAC_CS_PIN = 17;
