@@ -47,17 +47,16 @@ AudioEngine::AudioEngine()
   gpio_set_function(DAC_MOSI_PIN, GPIO_FUNC_SPI);
   gpio_set_function(DAC_CS_PIN, GPIO_FUNC_SPI);
 
-  // Set up PWM for timer-based sample triggering
-  // Choose a PWM slice (0-7)
+  // set up PWM for timer-based sample triggering
+  // choose a PWM slice (0-7)
   uint slice_num = pwm_gpio_to_slice_num(PWM_TIMER_PIN);
 
-  // Calculate PWM clock divider and wrap value to get precise sample rate
-  // The RP2040 clock runs at 125MHz by default
+  // calculate PWM clock divider and wrap value to get precise sample rate
   float clock_div = 1.0f; // Start with no division
   uint32_t wrap_value =
       (uint32_t)(PICO_CLOCK_SPEED / (clock_div * SAMPLE_RATE_HZ)) - 1;
 
-  // Adjust if wrap_value is outside valid range (0-65535)
+  // adjust if wrap_value is outside valid range (0-65535)
   while (wrap_value > 65535) {
     clock_div *= 2.0f;
     wrap_value =

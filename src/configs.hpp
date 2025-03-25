@@ -89,4 +89,5 @@ constexpr uint16_t TWELVE_BIT_HALFWAY = 2048;
 
 constexpr uint8_t PWM_TIMER_PIN = 15; // unused GPIO pin
 
-constexpr uint32_t PICO_CLOCK_SPEED = 150000000; // 150 MHz
+// 150 MHz on the RP2350, update if overclocked later
+constexpr uint32_t PICO_CLOCK_SPEED = 150000000;
