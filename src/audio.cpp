@@ -2,16 +2,22 @@
 
 #include "audio.hpp"
 #include "kick.hpp"
+
 #include "src/configs.hpp"
 #include "src/snare.hpp"
+
 #include <cstdint>
 #include <cstring>
+
 #include <hardware/dma.h>
 #include <hardware/gpio.h>
 #include <hardware/irq.h>
 #include <hardware/regs/intctrl.h>
 #include <hardware/spi.h>
+#include <hardware/structs/dma.h>
 #include <hardware/structs/io_bank0.h>
+
+AudioEngine audioEngine;
 
 AudioEngine::AudioEngine()
     : dma_channel_(dma_claim_unused_channel(true)),
@@ -141,4 +147,81 @@ AudioEngine::AudioEngine()
   // dac)
   dma_channel_configure(dma_channel_, &dma_config, &spi_get_hw(spi_)->dr,
                         audio_buffer_A_.data(), AUDIO_BUFFER_SIZE, true);
+}
+
+void AudioEngine::fillAudioBuffer(uint16_t *buffer, uint32_t length) {
+  FUNCTION_PRINT("AudioEngine::fillAudioBuffer\n");
+
+  // fill buffer with mixed audio
+  for (uint32_t i = 0; i < length; i++) {
+    // mix all active voices with a 32-bit accumulator
+    int32_t mix_sum = 0;
+
+    for (auto &voice : voices_) {
+      if (voice.active) {
+        const DrumSample &sample = samples_[voice.drum_id];
+
+        if (voice.position < sample.length) {
+          int16_t sample_val = sample.data[voice.position];
+
+          // apply velocity scaling with fixed-point arithmetic
+          // use the full 32-bit multiplication for accuracy
+          int32_t scaled_val = ((int32_t)sample_val * voice.velocity) >> 12;
+
+          // add to mix
+          mix_sum += scaled_val;
+
+          ++voice.position; // increment the voice's position in the array
+        } else {
+          // end of sample reached
+          voice.active = false;
+        }
+      }
+    }
+
+    // clamp to 12-bit signed range
+    if (mix_sum > 2047)
+      mix_sum = 2047;
+    if (mix_sum < -2048)
+      mix_sum = -2048;
+
+    buffer[i] = convertToDacFormat((int16_t)mix_sum);
+  }
+}
+
+uint16_t AudioEngine::convertToDacFormat(int16_t sample) {
+  // convert from 12 bit signed bit to unsigned 12 bit for DAC
+  uint16_t dac_value = (sample + 2048) & 0x0FFF;
+
+  // add control bits for the mcp4922
+  // 0x3000 = 0b0011000000000000 = DAC out A, 1x gain, active
+  return 0x3000 | dac_value;
+}
+
+void AudioEngine::dmaIRQHandler() {
+  // clear the interrupt
+  dma_hw->ints0 = 1u << audioEngine.dma_channel_;
+
+  // determine which buffer just finished
+  if (audioEngine.buffer_flip_) {
+    // just finished buffer B, prepare buffer A
+    audioEngine.fillAudioBuffer(audioEngine.audio_buffer_A_.data(),
+                                AUDIO_BUFFER_SIZE);
+
+    // update dma read source to point to buffer B
+    dma_channel_set_read_addr(audioEngine.chain_dma_channel_,
+                              audioEngine.audio_buffer_A_.data(), false);
+
+    audioEngine.buffer_flip_ = false;
+  } else {
+    // just finished buffer A, prepare buffer B
+    audioEngine.fillAudioBuffer(audioEngine.audio_buffer_B_.data(),
+                                AUDIO_BUFFER_SIZE);
+    dma_channel_set_read_addr(audioEngine.dma_channel_,
+                              audioEngine.audio_buffer_B_.data(), false);
+
+    audioEngine.buffer_flip_ = true;
+  }
+
+  dma_channel_start(audioEngine.dma_channel_);
 }

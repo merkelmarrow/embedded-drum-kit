@@ -17,7 +17,7 @@ struct Voice {
   bool active = false;
   uint8_t drum_id = 0;      // which drum sound is playing, ie. kick or snare
   uint32_t position = 0;    // position in the sound array
-  uint32_t velocity = 1000; // playback velocity from the piezos
+  uint16_t velocity = 1000; // playback velocity from the piezos
 };
 
 class AudioEngine {
@@ -51,4 +51,7 @@ private:
   // when the main dma finishes a buffer, this chain DMA updates the
   // main dma to point to the next buffer
   uint32_t chain_dma_channel_ = 1;
+
+  // helper method to convert signed samples to unsigned centred at 2048 for DAC
+  static inline uint16_t convertToDacFormat(int16_t sample);
 };
