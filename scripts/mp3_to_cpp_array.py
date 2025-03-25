@@ -14,16 +14,19 @@ def load_pcm_from_mp3(path: str) -> np.ndarray:
         "-"
     ]
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, check=True)
-    return np.frombuffer(proc.stdout, dtype=np.int16).astype(np.int32)
+    return np.frombuffer(proc.stdout, dtype=np.int16)
 
-def convert_to_12bit(samples: np.ndarray) -> np.ndarray:
-    # Map [-32768, +32767] to  [0, 4095], centre = 2048
-    return np.clip(((samples / 32767.0) * 2047).astype(int) + 2048, 0, 4095)
+def convert_to_12bit_centered(samples: np.ndarray) -> np.ndarray:
+    # Map [-32768, +32767] to [-2048, +2047] to center around 0
+    samples_float = samples.astype(np.float32)
+    scaled = (samples_float / 32768.0) * 2048.0
+    scaled = np.clip(scaled, -2048, 2047)
+    return scaled.astype(np.int16)
 
 def write_cpp_header(arr: np.ndarray, outfile: str, var: str):
     with open(outfile, "w") as f:
         f.write("#pragma once\n#include <cstdint>\n\n")
-        f.write(f"const uint16_t {var}[] = {{\n")
+        f.write(f"const int16_t {var}[] = {{\n")
         for i, val in enumerate(arr):
             if i % 12 == 0:
                 f.write("    ")
@@ -32,7 +35,7 @@ def write_cpp_header(arr: np.ndarray, outfile: str, var: str):
             if i % 12 == 11:
                 f.write("\n")
         f.write("};\n")
-        f.write(f"const unsigned {var}_length = {len(arr)};\n")
+        f.write(f"const uint32_t {var.upper()}_LENGTH = sizeof({var}) / sizeof({var}[0]);\n")
 
 def main():
     p = argparse.ArgumentParser()
@@ -42,7 +45,7 @@ def main():
     args = p.parse_args()
 
     pcm = load_pcm_from_mp3(args.input)
-    arr12 = convert_to_12bit(pcm)
+    arr12 = convert_to_12bit_centered(pcm)
     write_cpp_header(arr12, args.output, args.var)
 
 if __name__ == "__main__":
