@@ -3844,4 +3844,4 @@ const uint16_t kick[] = {
     2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048
 
 };
-const unsigned kick_length = 46080;
+const uint32_t kick_length = 46080;

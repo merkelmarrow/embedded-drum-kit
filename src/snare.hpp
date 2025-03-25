@@ -2692,4 +2692,4 @@ const uint16_t snare[] = {
     2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048
 
 };
-const unsigned snare_length = 32256;
+const uint32_t snare_length = 32256;
