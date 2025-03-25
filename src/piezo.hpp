@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstdint>
+#include <stdio.h>
 
 #include "configs.hpp"
 
@@ -25,7 +26,10 @@ class Piezo {
     Piezo();
     ~Piezo() = default;
 
-    void setPiezoCallback(PiezoCallback cb) { piezo_callback_ = cb; }
+    void setPiezoCallback(PiezoCallback cb) { 
+        printf("Piezo::setPiezoCallback\n");
+        piezo_callback_ = cb; 
+    }
     void update();
 
     private:

@@ -9,7 +9,7 @@
 
 // instantiate the piezo
 // the constructor initialises the ADC and other important stuff
-Piezo piezo;
+
 
 // callback function for sensor triggers
 void drumHitCallback(uint8_t piezo_index, uint16_t velocity) {
@@ -20,6 +20,8 @@ int main() {
     stdio_init_all();
 
     sleep_ms(10000); // wait for serial monitor connection
+    printf("main\n");
+    Piezo piezo;
 
     piezo.setPiezoCallback(drumHitCallback);
 

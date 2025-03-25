@@ -3,10 +3,12 @@
 #include "configs.hpp"
 #include "hardware/adc.h"
 #include <hardware/timer.h>
+#include <stdio.h>
 
 #include "piezo.hpp"
 
 Piezo::Piezo() {
+    printf("Piezo::Piezo\n");
     adc_init();
 
     // Set maximum sample rate for the ADC
@@ -37,6 +39,7 @@ Piezo::Piezo() {
 }
 
 void Piezo::selectMuxChannel(uint8_t channel) {
+    printf("Piezo::selectMuxChannel\n");
     // convert the channel to binary
     // adding 5 to all the binary outputs just for space reasons on the breadboard
     // (A5-A7 are on the left of the mux, while A0-A2 are on the right)
@@ -60,6 +63,7 @@ void Piezo::selectMuxChannel(uint8_t channel) {
 
 // function polls two of the piezos and updates which two piezos to poll next
 void Piezo::update() {
+    printf("Piezo::update\n");
     // read adc0 and adc1 for raw values
     adc_select_input(0);
     uint16_t raw0 = adc_read();
@@ -83,6 +87,7 @@ void Piezo::update() {
 }
 
 void Piezo::processPiezoReading(uint8_t piezo_index, uint16_t reading, uint32_t current_time_us) {
+    printf("Piezo::processPiezoReading\n");
     if (piezo_index >= NUM_PIEZOS) return;
 
     // access the piezo's current state (reference to avoid copying)
