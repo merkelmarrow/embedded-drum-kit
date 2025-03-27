@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 // Uncomment the next line to enable debugging statements
-#define DEBUG_ENABLED
+// #define DEBUG_ENABLED
 
 // Uncomment the next line to enable function call statements
 // #define FUNCTION_CALL_DEBUG

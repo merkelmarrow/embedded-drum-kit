@@ -11,9 +11,7 @@
 
 // callback function for sensor triggers
 void drumHitCallback(uint8_t piezo_index, uint16_t velocity) {
-  DEBUG_PRINT("Drum hit detected: Piezo %d, Velocity %d\n", piezo_index,
-              velocity);
-
+  DEBUG_PRINT("Drum hit: Piezo %d, Vel %d\n", piezo_index, velocity);
   audioEngine.playSound(piezo_index, velocity);
 }
 
@@ -26,7 +24,6 @@ int main() {
   audioEngine.init();
 
   // instantiate the piezo
-  // the constructor initialises the ADC and other important stuff
   Piezo piezo;
   piezo.setPiezoCallback(drumHitCallback);
 
