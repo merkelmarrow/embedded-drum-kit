@@ -20,9 +20,14 @@
 #include <hardware/structs/io_bank0.h>
 #include <pico/time.h>
 
+#define MAX_LOOP_DURATION_SAMPLES (44100 * 4)
+
+
 AudioEngine audioEngine;
 LoopTrack loop;
 uint32_t sample_counter = 0;
+uint32_t loop_start_sample = 0;
+
 
 AudioEngine::AudioEngine()
     : dma_channel_(dma_claim_unused_channel(true)),
@@ -143,6 +148,12 @@ void AudioEngine::init() {
   // start PWM to trigger DMA transfers
   DEBUG_PRINT("Starting PWM to trigger DMA\n");
   pwm_set_enabled(slice_num, true);
+  
+  // Comment this to disable the loop recording without buttons
+  loop.startRecording();
+  DEBUG_PRINT("Loop recording started\n");
+  loop_start_sample = sample_counter;
+
 }
 
 void AudioEngine::fillAudioBuffer(uint16_t *buffer, uint32_t length) {
@@ -198,6 +209,12 @@ void AudioEngine::fillAudioBuffer(uint16_t *buffer, uint32_t length) {
 
     // store in the buffer
     buffer[i] = convertToDacFormat((int16_t)mix_sum);
+
+    if (loop.isRecording() &&
+        (sample_counter - loop_start_sample >= MAX_LOOP_DURATION_SAMPLES)) {
+        loop.stopRecording();
+        DEBUG_PRINT("Loop auto-stopped after 4 seconds\n");
+    }
 
     // Call tick to check if anything should play
     loop.tick(sample_counter, [](uint8_t drum_id, uint16_t velocity){

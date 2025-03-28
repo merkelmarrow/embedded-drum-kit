@@ -3,7 +3,7 @@
 // Start recording a new loop
 void LoopTrack::startRecording() {
     // Clear the events and start recording
-    events_.clear();
+    event_count_ = 0;
     // Set the recording flag
     recording_ = true;
     // Clear the playing flag
@@ -18,8 +18,8 @@ void LoopTrack::stopRecording() {
     // Set the playing flag
     playing_ = true;
     // Calculate the loop length
-    if (!events_.empty()) {
-        loop_length_ = events_.back().timestamp;
+    if (event_count_ > 0) {
+        loop_length_ = events_[event_count_ -1].timestamp;
     }
 }
 
@@ -31,7 +31,13 @@ void LoopTrack::addEvent(uint8_t drum_id, uint16_t velocity, uint32_t current_sa
         // Record the start time
         record_start_sample_ = current_sample_time;
     // Add the event
-    events_.push_back({current_sample_time - record_start_sample_, drum_id, velocity});
+    if (event_count_ < events_.size()) {
+        events_[event_count_++] = {
+            current_sample_time - record_start_sample_,
+            drum_id,
+            velocity
+        };
+    }
 }
 
 void LoopTrack::tick(uint32_t current_sample_time, void (*playFunc)(uint8_t, uint16_t)) {
@@ -40,7 +46,8 @@ void LoopTrack::tick(uint32_t current_sample_time, void (*playFunc)(uint8_t, uin
 
     // Calculate the position in the loop
     uint32_t position_in_loop = (current_sample_time - record_start_sample_) % loop_length_;
-    for (const auto& e : events_) {
+    for (size_t i = 0; i < event_count_; ++i) {
+        const auto& e = events_[i];
         // If the event is at the current position, play it
         if (e.timestamp == position_in_loop) {
             // Play the event
@@ -51,7 +58,7 @@ void LoopTrack::tick(uint32_t current_sample_time, void (*playFunc)(uint8_t, uin
 
 void LoopTrack::clear() {
     // Clear the loop
-    events_.clear();
+    event_count_ = 0;
     playing_ = false;
     recording_ = false;
 }

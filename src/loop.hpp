@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <cstdint>
+#include <array>
 
 struct LoopEvent {
     // Time in samples since the start of the recording
@@ -34,8 +35,10 @@ public:
     uint32_t getLength() const;
 
 private:
+    static constexpr size_t MAX_EVENTS = 12;
     // The recorded events
-    std::vector<LoopEvent> events_;
+    std::array<LoopEvent, MAX_EVENTS> events_;
+    size_t event_count_ = 0;
     // Are we currently recording
     bool recording_ = false;
     // Are we currently playing
