@@ -2,6 +2,7 @@
 
 #include "audio.hpp"
 #include "configs.hpp"
+#include "loop.hpp"
 
 #include "kick.hpp"
 #include "snare.hpp"
@@ -20,6 +21,8 @@
 #include <pico/time.h>
 
 AudioEngine audioEngine;
+LoopTrack loop;
+uint32_t sample_counter = 0;
 
 AudioEngine::AudioEngine()
     : dma_channel_(dma_claim_unused_channel(true)),
@@ -195,6 +198,14 @@ void AudioEngine::fillAudioBuffer(uint16_t *buffer, uint32_t length) {
 
     // store in the buffer
     buffer[i] = convertToDacFormat((int16_t)mix_sum);
+
+    // Call tick to check if anything should play
+    loop.tick(sample_counter, [](uint8_t drum_id, uint16_t velocity){
+      audioEngine.playSound(drum_id, velocity);
+  
+    });
+
+    sample_counter++;
   }
 
   DEBUG_PRINT("Buffer: data[0]=0x%04x\n", buffer[0]);
@@ -255,6 +266,9 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
 
   uint16_t normalised_velocity = 0;
 
+  if (loop.isRecording()){
+    loop.addEvent(drum_id, velocity, sample_counter);
+  }
   if (velocity > HARDEST_HIT_PIEZO_VELOCITY) {
     normalised_velocity = TWELVE_BIT_MAX; // cap at maximum
     DEBUG_PRINT("Velocity capped at %d\n", TWELVE_BIT_MAX);
