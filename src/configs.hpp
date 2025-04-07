@@ -33,7 +33,7 @@ int roundup_div(int n, int d) {
 } // namespace
 
 // Half num piezos should be greater than half the number of piezos
-constexpr uint8_t NUM_PIEZOS = 2;
+constexpr uint8_t NUM_PIEZOS = 6;
 
 // don't touch
 const uint8_t HALF_NUM_PIEZOS = roundup_div(NUM_PIEZOS, 2);
@@ -52,11 +52,12 @@ constexpr uint8_t ADC2_PIN = 28; // for a potentiometer
 // ie. A5, A6 and A7
 constexpr uint8_t LOWEST_MUX_IN = 5;
 
-constexpr uint16_t BASE_PIEZO_THRESHOLD = 100;
+constexpr uint16_t BASE_PIEZO_THRESHOLD = 150;
 // kept as an array in case some piezos are more sensitive than others (due to
 // component variations)
-constexpr uint16_t PIEZO_THRESHOLD[NUM_PIEZOS] = {BASE_PIEZO_THRESHOLD,
-                                                  BASE_PIEZO_THRESHOLD};
+constexpr uint16_t PIEZO_THRESHOLD[NUM_PIEZOS] = {
+    BASE_PIEZO_THRESHOLD, BASE_PIEZO_THRESHOLD, BASE_PIEZO_THRESHOLD,
+    BASE_PIEZO_THRESHOLD, BASE_PIEZO_THRESHOLD, BASE_PIEZO_THRESHOLD};
 
 // the velocity value from a piezo hit that will result in max velocity sound
 // every hit harder than that will be max velocity
@@ -74,7 +75,7 @@ constexpr uint32_t PIEZO_CAPTURE_TIME_US = 1 * 1000;
 
 constexpr uint32_t SAMPLE_RATE_HZ = 44100;
 constexpr uint32_t AUDIO_BUFFER_SIZE = 256;
-constexpr uint8_t NUM_VOICES = 8;
+constexpr uint8_t NUM_VOICES = 20;
 
 // number of samples stored should match the number of piezos used
 constexpr uint8_t NUM_DRUM_SAMPLES = NUM_PIEZOS;

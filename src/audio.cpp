@@ -3,8 +3,12 @@
 #include "audio.hpp"
 #include "configs.hpp"
 
+#include "closed_hi_hat.hpp"
 #include "kick.hpp"
 #include "snare.hpp"
+#include "src/crash_cymbal.hpp"
+#include "src/open_hi_hat.hpp"
+#include "src/ride_cymbal.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -33,6 +37,10 @@ void AudioEngine::init() {
   // initialize sample data
   samples_[0] = {(const int16_t *)kick, KICK_LENGTH};
   samples_[1] = {(const int16_t *)snare, SNARE_LENGTH};
+  samples_[2] = {(const int16_t *)closed_hi_hat, CLOSED_HI_HAT_LENGTH};
+  samples_[3] = {(const int16_t *)open_hi_hat, OPEN_HI_HAT_LENGTH};
+  samples_[4] = {(const int16_t *)crash_cymbal, CRASH_CYMBAL_LENGTH};
+  samples_[5] = {(const int16_t *)ride_cymbal, RIDE_CYMBAL_LENGTH};
 
   // initialize all voices to inactive
   // probably not needed but just in case
@@ -305,27 +313,5 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
     voices_[oldest_index].position = 0;
     voices_[oldest_index].velocity = normalised_velocity;
     DEBUG_PRINT("Voice stolen for sample %d\n", drum_id);
-  }
-}
-
-void AudioEngine::testVoices() {
-  static uint32_t last_test = 0;
-  uint32_t now = time_us_32();
-
-  // Only test every 2 seconds
-  if (now - last_test > 2000000) {
-    // Count active voices
-    int active_count = 0;
-    for (int v = 0; v < NUM_VOICES; v++) {
-      if (voices_[v].active) {
-        active_count++;
-        // Log position of each active voice
-        DEBUG_PRINT("Voice %d: sample=%d, pos=%lu/%lu\n", v, voices_[v].drum_id,
-                    voices_[v].position, samples_[voices_[v].drum_id].length);
-      }
-    }
-
-    DEBUG_PRINT("Total active voices: %d\n", active_count);
-    last_test = now;
   }
 }

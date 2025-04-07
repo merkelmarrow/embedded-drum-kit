@@ -50,6 +50,8 @@ void Piezo::selectMuxChannel(uint8_t channel) {
   gpio_put(MUX_S1_PIN, (binary_ch >> 1) & 0x1);
   gpio_put(MUX_S2_PIN, (binary_ch >> 2) & 0x1);
 
+  busy_wait_us(3);
+
   // random instructions to let the mux settle, takes approx 60ns according to
   // datasheet or around 10 instructions without overclocking so below are
   // random instructions to delay by 4-7 instructions since there will
