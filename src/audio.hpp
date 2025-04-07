@@ -43,8 +43,6 @@ private:
   alignas(4) std::array<uint16_t, AUDIO_BUFFER_SIZE> audio_buffer_B_;
   volatile bool buffer_flip_ = false; // which buffer is being filled/sent
 
-  // spi and dma config //
-
   // pointer to the RP2350s spi0 SPI controller
   spi_inst_t *spi_ = spi0;
 
