@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <hardware/spi.h>
 
-
 struct DrumSample {
   const int16_t *data;
   uint32_t length;

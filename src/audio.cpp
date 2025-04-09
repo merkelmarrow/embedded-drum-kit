@@ -23,15 +23,12 @@
 #include <hardware/structs/dma.h>
 #include <hardware/structs/io_bank0.h>
 
-
 #define MAX_LOOP_DURATION_SAMPLES (44100 * 4)
-
 
 AudioEngine audioEngine;
 LoopTrack loop;
 uint32_t sample_counter = 0;
 uint32_t loop_start_sample = 0;
-
 
 AudioEngine::AudioEngine()
     : dma_channel_(dma_claim_unused_channel(true)),
@@ -156,12 +153,11 @@ void AudioEngine::init() {
   // start PWM to trigger DMA transfers
   DEBUG_PRINT("Starting PWM to trigger DMA\n");
   pwm_set_enabled(slice_num, true);
-  
+
   // Comment this to disable the loop recording without buttons
-  //loop.startRecording();
+  // loop.startRecording();
   DEBUG_PRINT("Loop recording started\n");
   loop_start_sample = sample_counter;
-
 }
 
 void AudioEngine::fillAudioBuffer(uint16_t *buffer, uint32_t length) {
@@ -223,11 +219,10 @@ void AudioEngine::fillAudioBuffer(uint16_t *buffer, uint32_t length) {
         loop.stopRecording();
         DEBUG_PRINT("Loop auto-stopped after 4 seconds\n");
     }
-    */    
+    */
     // Call tick to check if anything should play
-    loop.tick(sample_counter, [](uint8_t drum_id, uint16_t velocity){
+    loop.tick(sample_counter, [](uint8_t drum_id, uint16_t velocity) {
       audioEngine.playSound(drum_id, velocity);
-  
     });
 
     sample_counter++;
@@ -291,7 +286,6 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
 
   uint16_t normalised_velocity = 0;
 
-  
   if (velocity > HARDEST_HIT_PIEZO_VELOCITY) {
     normalised_velocity = TWELVE_BIT_MAX; // cap at maximum
     DEBUG_PRINT("Velocity capped at %d\n", TWELVE_BIT_MAX);
@@ -308,11 +302,10 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
     normalised_velocity =
         (uint16_t)((velocity - BASE_PIEZO_THRESHOLD) * TWELVE_BIT_MAX /
                    (HARDEST_HIT_PIEZO_VELOCITY - BASE_PIEZO_THRESHOLD));
-    
-    
+
     DEBUG_PRINT("Velocity normalized to %d\n", normalised_velocity);
   }
-  if (loop.isRecording()){
+  if (loop.isRecording()) {
     loop.addEvent(drum_id, normalised_velocity, sample_counter);
   }
 

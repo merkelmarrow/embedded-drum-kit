@@ -6,10 +6,10 @@
 #include <stdio.h>
 
 #include "audio.hpp"
-#include "configs.hpp"
-#include "piezo.hpp"
-#include "loop.hpp"
 #include "buttons.cpp"
+#include "configs.hpp"
+#include "loop.hpp"
+#include "piezo.hpp"
 
 // callback function for sensor triggers
 void drumHitCallback(uint8_t piezo_index, uint16_t velocity) {
@@ -26,7 +26,8 @@ int main() {
   audioEngine.init();
   gpio_init(GPIO_BUTTON_A);
   gpio_set_dir(GPIO_BUTTON_A, GPIO_IN);
-  gpio_pull_up(GPIO_BUTTON_A);  // or pull_up if your button setup uses active low
+  gpio_pull_up(
+      GPIO_BUTTON_A); // or pull_up if your button setup uses active low
 
   gpio_init(GPIO_BUTTON_B);
   gpio_set_dir(GPIO_BUTTON_B, GPIO_IN);
