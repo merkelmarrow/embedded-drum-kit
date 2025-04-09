@@ -2,6 +2,10 @@
 #include "hardware/gpio.h"
 #include "loop.hpp"
 #include "stdio.h"
+#include "audio.hpp"
+#define LED_GREEN 21
+#define LED_RED 20
+#define LED_ORANGE 22
 
 #define DEBUG_PRINT(...) printf(__VA_ARGS__)
 
@@ -16,32 +20,40 @@ bool last_record_button = false;
 bool last_clear_button = false;
 
 void checkLoopButtons() {
-    // Reading the pins and gives back true if the button is pressed
     bool record_button = gpio_get(BUTTON_RECORD);
     bool clear_button = gpio_get(BUTTON_CLEAR);
 
-    // Edge detection (button press)
+    // Toggle recording or playback when RECORD button is pressed
     if (record_button && !last_record_button) {
-        // When it's not recording or playing, start recording 
         if (!loop.isRecording() && !loop.isPlaying()) {
             loop.startRecording();
             DEBUG_PRINT("Loop recording started\n");
-        } else if (loop.isRecording()) { // When it's recording, stop recording and start playing
+            gpio_put(LED_GREEN, 1); // turn on the green LED
+            gpio_put(LED_RED, 0); // turn off the red LED
+            gpio_put(LED_ORANGE, 0); // turn off the orange LED
+            //sleep_ms(4000);
+        } else if (loop.isRecording()) {
             loop.stopRecording();
-            DEBUG_PRINT("Loop recording stopped and playing\n");
-        } else { // When it's playing, stop playing
+            DEBUG_PRINT("Loop recording stopped, playback started\n");
+            gpio_put(LED_GREEN, 0); // turn off the green LED
+            gpio_put(LED_RED, 0); // turn on the red LED
+            gpio_put(LED_ORANGE, 1); // turn on the orange LED
+        } else if (loop.isPlaying()) {
             loop.clear();
             DEBUG_PRINT("Loop stopped and cleared\n");
         }
     }
 
-    // If button B is pressed, clear the loop
+    // Clear the loop when CLEAR button is pressed
     if (clear_button && !last_clear_button) {
         loop.clear();
         DEBUG_PRINT("Loop manually cleared\n");
+        gpio_put(LED_RED, 1); // turn on the red LED
+        gpio_put(LED_GREEN, 0); // turn off the green LED
+        gpio_put(LED_ORANGE, 0); // turn off the orange LED
+        //sleep_ms(4000);
     }
 
-    // Update the last button states
     last_record_button = record_button;
     last_clear_button = clear_button;
 }

@@ -11,6 +11,13 @@ struct LoopEvent {
     // How hard to play it
     uint16_t velocity;
 };
+/*
+struct LoopEvent {
+    uint32_t tick;         // quantized timestamp
+    uint8_t drum_id;
+    uint16_t velocity;
+};
+*/
 
 // A class to record and play back a loop of drum events
 class LoopTrack {
