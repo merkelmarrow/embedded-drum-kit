@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(pico-drum-kit src/main.cpp src/configs.hpp src/piezo.cpp src/audio.cpp src/kick.hpp src/snare.hpp)
+add_executable(pico-drum-kit src/main.cpp src/configs.hpp src/piezo.cpp src/audio.cpp src/kick.hpp src/snare.hpp src/loop.cpp)
 
 pico_set_program_name(pico-drum-kit "pico-drum-kit")
 pico_set_program_version(pico-drum-kit "0.1")
