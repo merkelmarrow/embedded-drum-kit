@@ -18,7 +18,7 @@ public:
   // Start recording a new loop
   void startRecording();
   // Stop recording and start playing the loop
-  void stopRecording();
+  void stopRecording(uint32_t time_when_stopped);
   // Add a drum event to the loop
   void addEvent(uint8_t drum_id, uint16_t velocity,
                 uint32_t current_sample_time);
@@ -36,7 +36,7 @@ public:
   uint32_t getLength() const;
 
 private:
-  static constexpr size_t MAX_EVENTS = 12;
+  static constexpr size_t MAX_EVENTS = 1000;
   // The recorded events
   std::array<LoopEvent, MAX_EVENTS> events_;
   size_t event_count_ = 0;
@@ -48,4 +48,6 @@ private:
   uint32_t record_start_sample_ = 0;
   // The length of the loop in samples
   uint32_t loop_length_ = 0;
+
+  uint32_t last_position_in_loop_ = 0;
 };

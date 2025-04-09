@@ -1,17 +1,15 @@
-#include "audio.hpp"
+#include "configs.hpp"
 #include "hardware/gpio.h"
 #include "loop.hpp"
-#include "pico/stdlib.h"
-#include "stdio.h"
+
 #define LED_GREEN 21
 #define LED_RED 20
 #define LED_ORANGE 22
 
-#define DEBUG_PRINT(...) printf(__VA_ARGS__)
-
 extern LoopTrack loop;
-#define GPIO_BUTTON_A 0
-#define GPIO_BUTTON_B 1
+extern uint32_t sample_counter; // need access to this from audio.cpp
+constexpr int GPIO_BUTTON_A = 0;
+constexpr int GPIO_BUTTON_B = 1;
 
 #define BUTTON_RECORD GPIO_BUTTON_A
 #define BUTTON_CLEAR GPIO_BUTTON_B
@@ -20,8 +18,8 @@ bool last_record_button = false;
 bool last_clear_button = false;
 
 void checkLoopButtons() {
-  bool record_button = gpio_get(BUTTON_RECORD);
-  bool clear_button = gpio_get(BUTTON_CLEAR);
+  bool record_button = !gpio_get(BUTTON_RECORD); // active low
+  bool clear_button = !gpio_get(BUTTON_CLEAR);
 
   // Toggle recording or playback when RECORD button is pressed
   if (record_button && !last_record_button) {
@@ -33,7 +31,8 @@ void checkLoopButtons() {
       gpio_put(LED_ORANGE, 0); // turn off the orange LED
                                // sleep_ms(4000);
     } else if (loop.isRecording()) {
-      loop.stopRecording();
+      uint32_t current_time = sample_counter;
+      loop.stopRecording(current_time);
       DEBUG_PRINT("Loop recording stopped, playback started\n");
       gpio_put(LED_GREEN, 0);  // turn off the green LED
       gpio_put(LED_RED, 0);    // turn on the red LED
