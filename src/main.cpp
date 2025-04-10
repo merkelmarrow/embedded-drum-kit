@@ -39,7 +39,6 @@ int main() {
   gpio_set_dir(BUTTON_OVERDUB, GPIO_IN);
   gpio_pull_up(BUTTON_OVERDUB);
 
-  // --- Initialize LEDs ---
   gpio_init(LED_GREEN);
   gpio_set_dir(LED_GREEN, GPIO_OUT);
   gpio_init(LED_RED);

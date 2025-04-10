@@ -4,12 +4,18 @@
 #include "configs.hpp"
 #include "loop.hpp"
 
+#include "bass.hpp"
 #include "closed_hi_hat.hpp"
+#include "crash_cymbal.hpp"
+#include "fx1.hpp"
 #include "kick.hpp"
+#include "open_hi_hat.hpp"
+#include "pad1.hpp"
+#include "ride_cymbal.hpp"
 #include "snare.hpp"
-#include "src/crash_cymbal.hpp"
-#include "src/open_hi_hat.hpp"
-#include "src/ride_cymbal.hpp"
+#include "sweep.hpp"
+#include "synth1.hpp"
+#include "vocal1.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -46,6 +52,12 @@ void AudioEngine::init() {
   samples_[3] = {(const int16_t *)open_hi_hat, OPEN_HI_HAT_LENGTH};
   samples_[4] = {(const int16_t *)crash_cymbal, CRASH_CYMBAL_LENGTH};
   samples_[5] = {(const int16_t *)ride_cymbal, RIDE_CYMBAL_LENGTH};
+  samples_[6] = {(const int16_t *)fx1, FX1_LENGTH};
+  samples_[7] = {(const int16_t *)pad1, PAD1_LENGTH};
+  samples_[8] = {(const int16_t *)synth1, SYNTH1_LENGTH};
+  samples_[9] = {(const int16_t *)vocal1, VOCAL1_LENGTH};
+  samples_[10] = {(const int16_t *)sweep, SWEEP_LENGTH};
+  samples_[11] = {(const int16_t *)bass, BASS_LENGTH};
 
   // initialize all voices to inactive
   // probably not needed but just in case
