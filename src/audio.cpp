@@ -340,7 +340,7 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
                     TWELVE_BIT_MAX) /
                    (HARDEST_HIT_PIEZO_VELOCITY - BASE_PIEZO_THRESHOLD));
   }
-  if (loop.isRecording()) {
+  if (loop.isRecording() || (loop.isPlaying() && loop.isOverdubEnabled())) {
     loop.addEvent(drum_id, normalised_velocity, sample_counter);
     DEBUG_PRINT("Event added to loop: Drum %d, NormVel %d, Time %lu\n", drum_id,
                 normalised_velocity, sample_counter);
