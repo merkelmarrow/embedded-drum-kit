@@ -28,21 +28,29 @@ void LoopTrack::stopRecording(uint32_t time_when_stopped) {
     loop_length_ = 0;
   }
 
-  if (event_count_ == 0) {
+  if (event_count_ == 0 || loop_length_ == 0) {
     playing_ = false;
   }
 
   last_position_in_loop_ = 0;
 }
 
+// allow adding events if
+// A -> in the initial recording phase
+// B -> playing back and overdub mode is enabled
 void LoopTrack::addEvent(uint8_t drum_id, uint16_t normalized_velocity,
                          uint32_t current_absolute_sample_time) {
 
-  if (!recording_)
+  if (!recording_ && !(playing_ && overdub_enabled_))
     return;
-  if (record_start_sample_ == 0 && event_count_ == 0) {
+
+  // set start time only on the first event during initial recording
+  if (recording_ && record_start_sample_ == 0 && event_count_ == 0) {
     record_start_sample_ = current_absolute_sample_time;
   }
+
+  if (record_start_sample_ == 0)
+    return;
 
   // Add the event if space available
   if (event_count_ < events_.size()) {
@@ -52,17 +60,23 @@ void LoopTrack::addEvent(uint8_t drum_id, uint16_t normalized_velocity,
     events_[event_count_++] = {relative_timestamp, drum_id,
                                normalized_velocity};
   } else {
-    // stop recording automatically if full?
-    stopRecording(current_absolute_sample_time);
+    // if buffer full, stop recording if recording
+    // stop adding events if overdubbing (but without stopping playback)
+    if (recording_) {
+      stopRecording(current_absolute_sample_time);
+    }
   }
 }
 
 void LoopTrack::tick(uint32_t current_sample_time) {
-  if (!playing_ || loop_length_ == 0 || event_count_ == 0)
+  if (!playing_ || loop_length_ == 0 || event_count_ == 0 ||
+      record_start_sample_ == 0)
     return;
 
   // this will defo break after the 32 bit timer wraps around
-  uint32_t elapsed_time = current_sample_time - record_start_sample_;
+  uint32_t elapsed_time =
+      current_sample_time -
+      record_start_sample_; // time elapsed since the start of the loop
 
   uint32_t current_position_in_loop = elapsed_time % loop_length_;
 
@@ -98,6 +112,10 @@ void LoopTrack::tick(uint32_t current_sample_time) {
   }
   last_position_in_loop_ = current_position_in_loop;
 }
+
+void LoopTrack::toggleOverdub() { overdub_enabled_ = !overdub_enabled_; }
+
+bool LoopTrack::isOverdubEnabled() const { return overdub_enabled_; }
 
 void LoopTrack::clear() {
   // Clear the loop

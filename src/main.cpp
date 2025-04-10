@@ -24,24 +24,31 @@ int main() {
   FUNCTION_PRINT("main\n");
 
   audioEngine.init();
+
   gpio_init(GPIO_BUTTON_A);
   gpio_set_dir(GPIO_BUTTON_A, GPIO_IN);
-  gpio_pull_up(
-      GPIO_BUTTON_A); // or pull_up if your button setup uses active low
+  gpio_pull_up(GPIO_BUTTON_A);
 
   gpio_init(GPIO_BUTTON_B);
   gpio_set_dir(GPIO_BUTTON_B, GPIO_IN);
   gpio_pull_up(GPIO_BUTTON_B);
 
+  gpio_init(BUTTON_OVERDUB);
+  gpio_set_dir(BUTTON_OVERDUB, GPIO_IN);
+  gpio_pull_up(BUTTON_OVERDUB);
+
+  // --- Initialize LEDs ---
   gpio_init(LED_GREEN);
   gpio_set_dir(LED_GREEN, GPIO_OUT);
-  gpio_put(LED_GREEN, 0); // turn off the green LED
   gpio_init(LED_RED);
   gpio_set_dir(LED_RED, GPIO_OUT);
-  gpio_put(LED_RED, 0); // turn off the red LED
   gpio_init(LED_ORANGE);
   gpio_set_dir(LED_ORANGE, GPIO_OUT);
-  gpio_put(LED_ORANGE, 0); // turn off the orange LED
+  gpio_init(LED_BLUE);
+  gpio_set_dir(LED_BLUE, GPIO_OUT);
+
+  updateLeds();
+
   // instantiate the piezo
   Piezo piezo;
   piezo.setPiezoCallback(drumHitCallback);

@@ -2,57 +2,78 @@
 #include "hardware/gpio.h"
 #include "loop.hpp"
 
-#define LED_GREEN 21
-#define LED_RED 20
-#define LED_ORANGE 22
-
 extern LoopTrack loop;
 extern uint32_t sample_counter; // need access to this from audio.cpp
-constexpr int GPIO_BUTTON_A = 0;
-constexpr int GPIO_BUTTON_B = 1;
 
 #define BUTTON_RECORD GPIO_BUTTON_A
 #define BUTTON_CLEAR GPIO_BUTTON_B
 
 bool last_record_button = false;
 bool last_clear_button = false;
+bool last_overdub_button = false;
+
+void updateLeds() {
+  // turn off LEDs before setting the right one
+  gpio_put(LED_GREEN, 0);
+  gpio_put(LED_RED, 0);
+  gpio_put(LED_ORANGE, 0);
+  gpio_put(LED_BLUE, 0);
+
+  if (loop.isRecording()) {
+    // recording = green
+    gpio_put(LED_GREEN, 1);
+  } else if (loop.isPlaying()) {
+    // playing = orange if overdub on, red if not
+    if (loop.isOverdubEnabled()) {
+      gpio_put(LED_ORANGE, 1);
+    } else {
+      gpio_put(LED_RED, 1);
+    }
+  } else {
+    // only playing live sounds = blue
+    gpio_put(LED_BLUE, 1);
+  }
+}
 
 void checkLoopButtons() {
-  bool record_button = !gpio_get(BUTTON_RECORD); // active low
+  // active low
+  bool record_button = !gpio_get(BUTTON_RECORD);
   bool clear_button = !gpio_get(BUTTON_CLEAR);
+  bool overdub_button = !gpio_get(BUTTON_OVERDUB);
 
-  // Toggle recording or playback when RECORD button is pressed
   if (record_button && !last_record_button) {
+    // if in live-only mode
     if (!loop.isRecording() && !loop.isPlaying()) {
+      // start recording
       loop.startRecording();
       DEBUG_PRINT("Loop recording started\n");
-      gpio_put(LED_GREEN, 1);  // turn on the green LED
-      gpio_put(LED_RED, 0);    // turn off the red LED
-      gpio_put(LED_ORANGE, 0); // turn off the orange LED
-                               // sleep_ms(4000);
+      // if in record mode
     } else if (loop.isRecording()) {
+      // stop initial recording, start playback
       uint32_t current_time = sample_counter;
       loop.stopRecording(current_time);
       DEBUG_PRINT("Loop recording stopped, playback started\n");
-      gpio_put(LED_GREEN, 0);  // turn off the green LED
-      gpio_put(LED_RED, 0);    // turn on the red LED
-      gpio_put(LED_ORANGE, 1); // turn on the orange LED
+      // if playing recording
     } else if (loop.isPlaying()) {
-      loop.clear();
-      DEBUG_PRINT("Loop stopped and cleared\n");
+      // record button does nothing while playing
+      // overdubbing controlled by third button
+      // clearing handled by the clear button
+      DEBUG_PRINT("Record button pressed while playing - no action.\n");
     }
+    updateLeds();
   }
 
-  // Clear the loop when CLEAR button is pressed
   if (clear_button && !last_clear_button) {
     loop.clear();
-    DEBUG_PRINT("Loop manually cleared\n");
-    gpio_put(LED_RED, 1);    // turn on the red LED
-    gpio_put(LED_GREEN, 0);  // turn off the green LED
-    gpio_put(LED_ORANGE, 0); // turn off the orange LED
-                             // sleep_ms(4000);
+    updateLeds();
+  }
+
+  if (overdub_button && !last_overdub_button) {
+    loop.toggleOverdub();
+    updateLeds();
   }
 
   last_record_button = record_button;
   last_clear_button = clear_button;
+  last_overdub_button = overdub_button;
 }

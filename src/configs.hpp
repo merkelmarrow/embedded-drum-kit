@@ -38,6 +38,15 @@ constexpr uint8_t NUM_PIEZOS = 6;
 // don't touch
 const uint8_t HALF_NUM_PIEZOS = roundup_div(NUM_PIEZOS, 2);
 
+constexpr uint8_t BUTTON_OVERDUB = 2;
+constexpr uint8_t LED_BLUE = 16;
+constexpr int GPIO_BUTTON_A = 0;
+constexpr int GPIO_BUTTON_B = 1;
+
+constexpr uint8_t LED_GREEN = 21;
+constexpr uint8_t LED_RED = 20;
+constexpr uint8_t LED_ORANGE = 22;
+
 constexpr uint8_t MUX_S0_PIN = 2;
 constexpr uint8_t MUX_S1_PIN = 3;
 constexpr uint8_t MUX_S2_PIN = 4;

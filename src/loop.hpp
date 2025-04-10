@@ -22,6 +22,7 @@ public:
   // Add a drum event to the loop
   void addEvent(uint8_t drum_id, uint16_t velocity,
                 uint32_t current_sample_time);
+  void toggleOverdub();
   // Play back the loop
   void tick(uint32_t current_absolute_sample_time);
   // Clear the loop
@@ -34,6 +35,8 @@ public:
   bool isPlaying() const;
   // Get the length of the loop in samples
   uint32_t getLength() const;
+
+  bool isOverdubEnabled() const;
 
 private:
   static constexpr size_t MAX_EVENTS = 1000;
@@ -50,4 +53,7 @@ private:
   uint32_t loop_length_ = 0;
 
   uint32_t last_position_in_loop_ = 0;
+
+  // start with overdubbing on by default
+  bool overdub_enabled_ = true;
 };
