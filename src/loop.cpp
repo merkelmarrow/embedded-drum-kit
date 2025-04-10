@@ -73,6 +73,14 @@ void LoopTrack::tick(uint32_t current_sample_time,
         event_should_trigger = true;
       }
     }
+    // wrap condition
+    // ie. last = 400, current = 10, length = 401
+    else if (current_position_in_loop < last_position_in_loop_) {
+      if (e.timestamp > last_position_in_loop_ ||
+          e.timestamp <= current_position_in_loop) {
+        event_should_trigger = true;
+      }
+    }
     // handles first tick
     else if (last_position_in_loop_ == current_position_in_loop) {
       if (e.timestamp == current_position_in_loop) {
