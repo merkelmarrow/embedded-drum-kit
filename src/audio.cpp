@@ -360,3 +360,9 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
 
   _allocateVoice(drum_id, normalised_velocity);
 }
+
+void AudioEngine::switchSoundBank() {
+  current_sound_bank_ = (current_sound_bank_ + 1) % 2;
+}
+
+uint8_t AudioEngine::getCurrentBank() const { return current_sound_bank_; }

@@ -43,6 +43,8 @@ constexpr uint8_t LED_BLUE = 16;
 constexpr int GPIO_BUTTON_A = 0;
 constexpr int GPIO_BUTTON_B = 1;
 
+constexpr uint8_t SAMPLE_SWITCH_BUTTON = 8;
+
 constexpr uint8_t LED_GREEN = 21;
 constexpr uint8_t LED_RED = 20;
 constexpr uint8_t LED_ORANGE = 22;
@@ -87,7 +89,7 @@ constexpr uint32_t AUDIO_BUFFER_SIZE = 256;
 constexpr uint8_t NUM_VOICES = 50;
 
 // number of samples stored should match the number of piezos used
-constexpr uint8_t NUM_DRUM_SAMPLES = NUM_PIEZOS;
+constexpr uint8_t NUM_DRUM_SAMPLES = 12;
 
 constexpr uint32_t SPI_BAUD_RATE = 10000000; // 10 MHz
 constexpr uint8_t DAC_SCK_PIN = 18;

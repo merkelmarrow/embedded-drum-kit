@@ -13,8 +13,9 @@
 
 // callback function for sensor triggers
 void drumHitCallback(uint8_t piezo_index, uint16_t velocity) {
-  DEBUG_PRINT("Drum hit: Piezo %d, Vel %d\n", piezo_index, velocity);
-  audioEngine.playSound(piezo_index, velocity);
+  uint8_t current_sound_bank = audioEngine.getCurrentBank();
+  uint8_t drum_id_to_play = piezo_index + (current_sound_bank * NUM_PIEZOS);
+  audioEngine.playSound(drum_id_to_play, velocity);
 }
 
 int main() {
@@ -48,6 +49,10 @@ int main() {
   gpio_init(LED_BLUE);
   gpio_set_dir(LED_BLUE, GPIO_OUT);
 
+  gpio_init(SAMPLE_SWITCH_BUTTON);
+  gpio_set_dir(SAMPLE_SWITCH_BUTTON, GPIO_IN);
+  gpio_pull_up(SAMPLE_SWITCH_BUTTON);
+
   updateLeds();
 
   // instantiate the piezo
@@ -57,6 +62,7 @@ int main() {
   while (true) {
     piezo.update();
     checkLoopButtons();
+    checkBankSwitchButton();
   }
 
   return 0;

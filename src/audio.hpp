@@ -37,6 +37,9 @@ public:
 
   static void dmaIRQHandler();
 
+  void switchSoundBank();
+  uint8_t getCurrentBank() const;
+
 private:
   std::array<DrumSample, NUM_DRUM_SAMPLES> samples_;
   std::array<Voice, NUM_VOICES> voices_;
@@ -62,6 +65,8 @@ private:
 
   // helper method to convert signed samples to unsigned centred at 2048 for DAC
   static inline uint16_t convertToDacFormat(int16_t sample);
+
+  uint8_t current_sound_bank_ = 0;
 };
 
 extern AudioEngine audioEngine;

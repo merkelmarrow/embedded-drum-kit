@@ -1,3 +1,4 @@
+#include "audio.hpp"
 #include "configs.hpp"
 #include "hardware/gpio.h"
 #include "loop.hpp"
@@ -11,6 +12,17 @@ extern uint32_t sample_counter; // need access to this from audio.cpp
 bool last_record_button = false;
 bool last_clear_button = false;
 bool last_overdub_button = false;
+bool last_bank_switch_button = false;
+
+void checkBankSwitchButton() {
+  bool bank_switch_button = !gpio_get(SAMPLE_SWITCH_BUTTON);
+
+  if (bank_switch_button && !last_bank_switch_button) {
+    audioEngine.switchSoundBank();
+  }
+
+  last_bank_switch_button = bank_switch_button;
+}
 
 void updateLeds() {
   // turn off LEDs before setting the right one
