@@ -44,26 +44,37 @@ void LoopTrack::addEvent(uint8_t drum_id, uint16_t normalized_velocity,
   if (!recording_ && !(playing_ && overdub_enabled_))
     return;
 
-  // set start time only on the first event during initial recording
-  if (recording_ && record_start_sample_ == 0 && event_count_ == 0) {
-    record_start_sample_ = current_absolute_sample_time;
+  uint32_t relative_timestamp;
+
+  if (recording_) {
+    if (record_start_sample_ == 0 && event_count_ == 0) {
+      record_start_sample_ = current_absolute_sample_time;
+    }
+    // no first hit yet
+    if (record_start_sample_ == 0)
+      return;
+
+    relative_timestamp = current_absolute_sample_time - record_start_sample_;
+
+  }
+  // if overdubbing
+  else {
+    if (loop_length_ == 0 || record_start_sample_ == 0)
+      return;
+
+    uint32_t elapsed_time = current_absolute_sample_time - record_start_sample_;
+    relative_timestamp = elapsed_time % loop_length_;
   }
 
-  if (record_start_sample_ == 0)
-    return;
-
-  // Add the event if space available
   if (event_count_ < events_.size()) {
-    uint32_t relative_timestamp =
-        current_absolute_sample_time - record_start_sample_;
-
     events_[event_count_++] = {relative_timestamp, drum_id,
                                normalized_velocity};
   } else {
-    // if buffer full, stop recording if recording
-    // stop adding events if overdubbing (but without stopping playback)
+    // if buffer full, stop recording if initial recording,
+    // otherwise just ignore the event during overdub.
     if (recording_) {
       stopRecording(current_absolute_sample_time);
+    } else {
     }
   }
 }
