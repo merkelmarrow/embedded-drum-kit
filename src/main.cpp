@@ -3,12 +3,12 @@
 #include <pico/stdio.h>
 #include <pico/stdlib.h>
 #include <pico/time.h>
-#include <stdio.h>
+
+#include <hardware/clocks.h>
 
 #include "audio.hpp"
 #include "buttons.cpp"
 #include "configs.hpp"
-#include "loop.hpp"
 #include "piezo.hpp"
 
 // callback function for sensor triggers
@@ -18,6 +18,8 @@ void drumHitCallback(uint8_t piezo_index, uint16_t velocity) {
 }
 
 int main() {
+
+  set_sys_clock_khz(250000, true);
   stdio_init_all();
 
   sleep_ms(5000); // wait for serial monitor connection

@@ -84,7 +84,7 @@ constexpr uint32_t PIEZO_CAPTURE_TIME_US = 1 * 1000;
 
 constexpr uint32_t SAMPLE_RATE_HZ = 44100;
 constexpr uint32_t AUDIO_BUFFER_SIZE = 256;
-constexpr uint8_t NUM_VOICES = 20;
+constexpr uint8_t NUM_VOICES = 50;
 
 // number of samples stored should match the number of piezos used
 constexpr uint8_t NUM_DRUM_SAMPLES = NUM_PIEZOS;
@@ -99,5 +99,5 @@ constexpr uint16_t TWELVE_BIT_HALFWAY = 2048;
 
 constexpr uint8_t PWM_TIMER_PIN = 15; // unused GPIO pin
 
-// 150 MHz on the RP2350, update if overclocked later
-constexpr uint32_t PICO_CLOCK_SPEED = 150000000;
+// 250 MHz
+constexpr uint32_t PICO_CLOCK_SPEED = 250000000;
