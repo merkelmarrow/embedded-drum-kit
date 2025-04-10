@@ -29,6 +29,9 @@ public:
 
   void testVoices();
 
+  // uses pre-normalised velocity to avoid looped sounds being waaay louder
+  void triggerVoiceFromLoop(uint8_t drum_id, uint16_t normalized_velocity);
+
   void playSound(uint8_t drum_id, uint16_t velocity);
   void fillAudioBuffer(uint16_t *buffer, uint32_t length);
 
@@ -37,6 +40,9 @@ public:
 private:
   std::array<DrumSample, NUM_DRUM_SAMPLES> samples_;
   std::array<Voice, NUM_VOICES> voices_;
+
+  // private helper to find an available voice slot and assign a sound
+  void _allocateVoice(uint8_t drum_id, uint16_t normalized_velocity);
 
   // double buffers for sound output
   alignas(4) std::array<uint16_t, AUDIO_BUFFER_SIZE> audio_buffer_A_;

@@ -221,9 +221,7 @@ void AudioEngine::fillAudioBuffer(uint16_t *buffer, uint32_t length) {
     }
     */
     // Call tick to check if anything should play
-    loop.tick(sample_counter, [](uint8_t drum_id, uint16_t velocity) {
-      audioEngine.playSound(drum_id, velocity);
-    });
+    loop.tick(sample_counter);
 
     sample_counter++;
   }
@@ -278,36 +276,8 @@ void AudioEngine::dmaIRQHandler() {
   }
 }
 
-void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
-  if (drum_id >= NUM_DRUM_SAMPLES)
-    return;
-
-  DEBUG_PRINT("Playing sound: drum_id=%d, velocity=%d\n", drum_id, velocity);
-
-  uint16_t normalised_velocity = 0;
-
-  if (velocity > HARDEST_HIT_PIEZO_VELOCITY) {
-    normalised_velocity = TWELVE_BIT_MAX; // cap at maximum
-    DEBUG_PRINT("Velocity capped at %d\n", TWELVE_BIT_MAX);
-  } else {
-    // linear mapping: (val - inMin) * (outMax - outMin) / (inMax - inMin) +
-    // outMin
-
-    // val = velocity.
-    // inMin = 100.
-    // outMax = 4095.
-    // outMin = 0.
-    // inMax = 1200.
-    // inMin = 100.
-    normalised_velocity =
-        (uint16_t)((velocity - BASE_PIEZO_THRESHOLD) * TWELVE_BIT_MAX /
-                   (HARDEST_HIT_PIEZO_VELOCITY - BASE_PIEZO_THRESHOLD));
-
-    DEBUG_PRINT("Velocity normalized to %d\n", normalised_velocity);
-  }
-  if (loop.isRecording()) {
-    loop.addEvent(drum_id, normalised_velocity, sample_counter);
-  }
+void AudioEngine::_allocateVoice(uint8_t drum_id,
+                                 uint16_t normalized_velocity) {
 
   // find first inactive voice and occupy it
   for (auto &voice : voices_) {
@@ -315,9 +285,9 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
       voice.active = true;
       voice.drum_id = drum_id;
       voice.position = 0;
-      voice.velocity = normalised_velocity;
-      DEBUG_PRINT("Voice allocated - Drum %d, Velocity %d\n", drum_id,
-                  normalised_velocity);
+      voice.velocity = normalized_velocity;
+      DEBUG_PRINT("Voice allocated - Drum %d, NormVel %d\n", drum_id,
+                  normalized_velocity);
       return;
     }
   }
@@ -338,7 +308,43 @@ void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
     voices_[oldest_index].active = true;
     voices_[oldest_index].drum_id = drum_id;
     voices_[oldest_index].position = 0;
-    voices_[oldest_index].velocity = normalised_velocity;
-    DEBUG_PRINT("Voice stolen for sample %d\n", drum_id);
+    voices_[oldest_index].velocity = normalized_velocity;
+    DEBUG_PRINT("Voice stolen for Drum %d, NormVel %d\n", drum_id,
+                normalized_velocity);
+  } else {
+    DEBUG_PRINT("ERR: Could not find inactive or oldest voice for Drum %d\n",
+                drum_id);
   }
+}
+
+void AudioEngine::triggerVoiceFromLoop(uint8_t drum_id,
+                                       uint16_t normalized_velocity) {
+  if (drum_id >= NUM_DRUM_SAMPLES)
+    return;
+
+  // directly call the allocation function with the pre-normalized velocity
+  _allocateVoice(drum_id, normalized_velocity);
+}
+
+void AudioEngine::playSound(uint8_t drum_id, uint16_t velocity) {
+  if (drum_id >= NUM_DRUM_SAMPLES)
+    return;
+
+  uint16_t normalised_velocity = 0;
+  if (velocity > HARDEST_HIT_PIEZO_VELOCITY) {
+    normalised_velocity = TWELVE_BIT_MAX;
+  } else {
+    // linear mapping
+    normalised_velocity =
+        (uint16_t)(((uint32_t)(velocity - BASE_PIEZO_THRESHOLD) *
+                    TWELVE_BIT_MAX) /
+                   (HARDEST_HIT_PIEZO_VELOCITY - BASE_PIEZO_THRESHOLD));
+  }
+  if (loop.isRecording()) {
+    loop.addEvent(drum_id, normalised_velocity, sample_counter);
+    DEBUG_PRINT("Event added to loop: Drum %d, NormVel %d, Time %lu\n", drum_id,
+                normalised_velocity, sample_counter);
+  }
+
+  _allocateVoice(drum_id, normalised_velocity);
 }

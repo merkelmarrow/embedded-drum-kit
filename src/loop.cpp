@@ -1,4 +1,5 @@
 #include "loop.hpp"
+#include "src/audio.hpp"
 #include <cstdint>
 
 // Start recording a new loop
@@ -34,37 +35,40 @@ void LoopTrack::stopRecording(uint32_t time_when_stopped) {
   last_position_in_loop_ = 0;
 }
 
-void LoopTrack::addEvent(uint8_t drum_id, uint16_t velocity,
-                         uint32_t current_sample_time) {
-  // Add a drum event to the loop
+void LoopTrack::addEvent(uint8_t drum_id, uint16_t normalized_velocity,
+                         uint32_t current_absolute_sample_time) {
+
   if (!recording_)
     return;
-  // If this is the first event, record the start time
-  if (event_count_ == 0)
-    // Record the start time
-    record_start_sample_ = current_sample_time;
-  // Add the event
-  if (event_count_ < events_.size()) {
-    uint32_t relative_timestamp = current_sample_time - record_start_sample_;
+  if (record_start_sample_ == 0 && event_count_ == 0) {
+    record_start_sample_ = current_absolute_sample_time;
+  }
 
-    events_[event_count_++] = {relative_timestamp, drum_id, velocity};
+  // Add the event if space available
+  if (event_count_ < events_.size()) {
+    uint32_t relative_timestamp =
+        current_absolute_sample_time - record_start_sample_;
+
+    events_[event_count_++] = {relative_timestamp, drum_id,
+                               normalized_velocity};
+  } else {
+    // stop recording automatically if full?
+    stopRecording(current_absolute_sample_time);
   }
 }
 
-void LoopTrack::tick(uint32_t current_sample_time,
-                     void (*playFunc)(uint8_t, uint16_t)) {
-  // Play back the loop
+void LoopTrack::tick(uint32_t current_sample_time) {
   if (!playing_ || loop_length_ == 0 || event_count_ == 0)
     return;
 
-  // handling edge cases
-  uint32_t elapsed_time = (current_sample_time >= record_start_sample_)
-                              ? (current_sample_time - record_start_sample_)
-                              : 0;
+  // this will defo break after the 32 bit timer wraps around
+  uint32_t elapsed_time = current_sample_time - record_start_sample_;
+
   uint32_t current_position_in_loop = elapsed_time % loop_length_;
 
   for (size_t i = 0; i < event_count_; i++) {
-    const auto &e = events_[i];
+    const auto &e =
+        events_[i]; // remember that e.timestamp is RELATIVE, not absolute
     bool event_should_trigger = false;
 
     if (last_position_in_loop_ < current_position_in_loop) {
@@ -89,7 +93,7 @@ void LoopTrack::tick(uint32_t current_sample_time,
     }
     // If the event should trigger, play it
     if (event_should_trigger) {
-      playFunc(e.drum_id, e.velocity);
+      audioEngine.triggerVoiceFromLoop(e.drum_id, e.velocity);
     }
   }
   last_position_in_loop_ = current_position_in_loop;

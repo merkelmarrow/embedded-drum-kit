@@ -23,7 +23,7 @@ public:
   void addEvent(uint8_t drum_id, uint16_t velocity,
                 uint32_t current_sample_time);
   // Play back the loop
-  void tick(uint32_t current_sample_time, void (*playFunc)(uint8_t, uint16_t));
+  void tick(uint32_t current_absolute_sample_time);
   // Clear the loop
   void clear();
 
