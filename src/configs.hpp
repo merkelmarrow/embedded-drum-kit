@@ -38,6 +38,17 @@ constexpr uint8_t NUM_PIEZOS = 6;
 // don't touch
 const uint8_t HALF_NUM_PIEZOS = roundup_div(NUM_PIEZOS, 2);
 
+constexpr uint8_t BUTTON_OVERDUB = 7;
+constexpr uint8_t LED_BLUE = 16;
+constexpr int GPIO_BUTTON_A = 0;
+constexpr int GPIO_BUTTON_B = 1;
+
+constexpr uint8_t SAMPLE_SWITCH_BUTTON = 8;
+
+constexpr uint8_t LED_GREEN = 21;
+constexpr uint8_t LED_RED = 20;
+constexpr uint8_t LED_ORANGE = 22;
+
 constexpr uint8_t MUX_S0_PIN = 2;
 constexpr uint8_t MUX_S1_PIN = 3;
 constexpr uint8_t MUX_S2_PIN = 4;
@@ -75,10 +86,10 @@ constexpr uint32_t PIEZO_CAPTURE_TIME_US = 1 * 1000;
 
 constexpr uint32_t SAMPLE_RATE_HZ = 44100;
 constexpr uint32_t AUDIO_BUFFER_SIZE = 256;
-constexpr uint8_t NUM_VOICES = 20;
+constexpr uint8_t NUM_VOICES = 50;
 
 // number of samples stored should match the number of piezos used
-constexpr uint8_t NUM_DRUM_SAMPLES = NUM_PIEZOS;
+constexpr uint8_t NUM_DRUM_SAMPLES = 12;
 
 constexpr uint32_t SPI_BAUD_RATE = 10000000; // 10 MHz
 constexpr uint8_t DAC_SCK_PIN = 18;
@@ -90,5 +101,5 @@ constexpr uint16_t TWELVE_BIT_HALFWAY = 2048;
 
 constexpr uint8_t PWM_TIMER_PIN = 15; // unused GPIO pin
 
-// 150 MHz on the RP2350, update if overclocked later
-constexpr uint32_t PICO_CLOCK_SPEED = 150000000;
+// 250 MHz
+constexpr uint32_t PICO_CLOCK_SPEED = 250000000;

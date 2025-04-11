@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <hardware/spi.h>
 
-
 struct DrumSample {
   const int16_t *data;
   uint32_t length;
@@ -30,14 +29,23 @@ public:
 
   void testVoices();
 
+  // uses pre-normalised velocity to avoid looped sounds being waaay louder
+  void triggerVoiceFromLoop(uint8_t drum_id, uint16_t normalized_velocity);
+
   void playSound(uint8_t drum_id, uint16_t velocity);
   void fillAudioBuffer(uint16_t *buffer, uint32_t length);
 
   static void dmaIRQHandler();
 
+  void switchSoundBank();
+  uint8_t getCurrentBank() const;
+
 private:
   std::array<DrumSample, NUM_DRUM_SAMPLES> samples_;
   std::array<Voice, NUM_VOICES> voices_;
+
+  // private helper to find an available voice slot and assign a sound
+  void _allocateVoice(uint8_t drum_id, uint16_t normalized_velocity);
 
   // double buffers for sound output
   alignas(4) std::array<uint16_t, AUDIO_BUFFER_SIZE> audio_buffer_A_;
@@ -57,6 +65,8 @@ private:
 
   // helper method to convert signed samples to unsigned centred at 2048 for DAC
   static inline uint16_t convertToDacFormat(int16_t sample);
+
+  uint8_t current_sound_bank_ = 0;
 };
 
 extern AudioEngine audioEngine;
