@@ -8,6 +8,11 @@ _Tech Stack_: Raspberry Pi Pico 2W (RP2350 MCU) and Pico SDK, C/C++ (no OS, real
 
 The brief for 3C10 Circuit and Systems Design was open ended. “Design a system that can sample or create audio signals, process them, and convert the processed signals for output to an audio device”. We wanted to create a kit that would allow the user to create drum beats live. While other groups went with the sequencer approach (with preprogrammed time-sequenced outputs), we wanted a more powerful platform: real-time drumming, full syncopation, velocity-sensitive inputs, and layering of many synthesiser and drum tracks. Since this all had to run on a single tiny Pi Pico, this project was going to live or die by the software’s performance optimisation.
 
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/8eb29894-2832-4018-83ee-eccb14d2ca60" alt="GP6-DK" style="width:50%; height:auto;">
+</p>
+
 ### What we built
 We built the GP6-DK: a six-pad, velocity sensitive electronic drum kit based around the Raspberry Pi Pico 2W microcontroller. The GP6-DK allows the user to record, loop, and overdub synthesiser and drum beats from a sample bank of 12 sounds.  High quality real-time mixed audio output is delivered via a 12-bit Digital to Analog Converter (DAC), interfaced over SPI and driven by a timed Direct Memory Access (DMA) system at 44.1 kHz and < 3 ms latency. The entire architecture is designed to minimise CPU intervention, keeping inputs snappy and allowing the user to play up to 50 sounds simultaneously. Testers reported the kit being genuinely enjoyable to use.
 
